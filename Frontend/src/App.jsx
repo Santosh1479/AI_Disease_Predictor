@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Result from "./pages/Result";
 import UserProtectWrapper from "./pages/UserProtectWrapper";
 import UserLogout from "./pages/UserLogout";
+import DoctorHome from "./pages/DoctorHome";
 import { LanguageProvider } from "./context/LanguageContext";
 
 const App = () => {
@@ -43,6 +44,14 @@ const App = () => {
             element={
               <UserProtectWrapper>
                 <Result />
+              </UserProtectWrapper>
+            }
+          />
+          <Route
+            path="/doctor-home"
+            element={
+              <UserProtectWrapper>
+                <DoctorHome />
               </UserProtectWrapper>
             }
           />

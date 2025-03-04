@@ -1,14 +1,32 @@
 const express = require('express');
 const cors = require('cors');
-const app = express();
+const http = require('http');
+const socketIo = require('socket.io');
 const cookieParser = require('cookie-parser');
 const connecttoDB = require('./db/db');
 const userRoutes = require('./routes/user.routes');
 const hospitalRoutes = require('./routes/hospital.routes');
 const doctorRoutes = require('./routes/doctor.routes');
+const messageRoutes = require('./routes/messages.routes');
+const resultsRoutes = require('./routes/results.routes');
+
 connecttoDB();
 
-app.use(cors());
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
+
+app.use(cors({
+  origin: 'http://localhost:5173', // Allow requests from this origin
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // Allow cookies to be sent
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -17,11 +35,19 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.get('/page', (req, res) => {
-  res.render('page.jsx');
-});
 app.use('/users', userRoutes);
 app.use('/hospitals', hospitalRoutes);
 app.use('/doctors', doctorRoutes);
+app.use('/messages', messageRoutes);
+app.use('/results', resultsRoutes);
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
 
 module.exports = app;
+
+

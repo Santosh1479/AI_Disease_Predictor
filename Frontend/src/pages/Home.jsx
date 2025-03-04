@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -39,8 +39,6 @@ const translations = {
 };
 
 const Home = () => {
-  const [micOn, setMicOn] = useState(false);
-  const recognitionRef = useRef(null);
   const [name, setName] = useState("");
   const [symptoms, setSymptoms] = useState("");
   const [image, setImage] = useState(null);
@@ -82,20 +80,50 @@ const Home = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const combinedInput = `${symptoms} ${description}`
+      .split(/\s+/)
+      .filter((word) => word.length >= 3)
+      .join(",");
+
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/diagnosis`,
-        { symptoms, image, description },
+        `http://127.0.0.1:5000/diagnosis`,
+        { input: combinedInput },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      navigate("/result", { state: { disease: response.data.disease } });
+      navigate("/results", { state: { disease: response.data.disease } });
     } catch (error) {
       console.error("Failed to submit diagnosis", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("image", image);
+
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:5000/upload_image`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      navigate("/results", { state: { disease: response.data.disease } });
+    } catch (error) {
+      console.error("Failed to upload image", error);
     } finally {
       setLoading(false);
     }
@@ -124,15 +152,6 @@ const Home = () => {
     } catch (error) {
       console.error("Error logging out:", error);
     }
-  };
-
-  const handleMicClick = () => {
-    if (micOn) {
-      recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
-    }
-    setMicOn(!micOn);
   };
 
   return (
@@ -173,30 +192,24 @@ const Home = () => {
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 {t.symptoms}
               </label>
-              <div className="flex items-center justify-center shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                <input
-                  type="text"
-                  value={symptoms}
-                  onChange={(e) => setSymptoms(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-                <i className="ri-mic-line text-xl font-bold w-6 ml-3"></i>
-              </div>
+              <input
+                type="text"
+                value={symptoms}
+                onChange={(e) => setSymptoms(e.target.value)}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                required
+              />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 {t.description}
               </label>
-              <div className="flex justify-center items-center shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-                <i className="ri-mic-line text-xl font-bold w-6 ml-3"></i>
-              </div>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                required
+              />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -215,6 +228,14 @@ const Home = () => {
               {t.submit}
             </button>
           </form>
+        )}
+        {image && (
+          <button
+            onClick={handleImageUpload}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
+          >
+            Upload Image
+          </button>
         )}
       </div>
     </div>

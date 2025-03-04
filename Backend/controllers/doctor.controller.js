@@ -17,6 +17,26 @@ module.exports.createDoctor = async (req, res, next) => {
     }
 };
 
+module.exports.loginDoctor = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+        const doctor = await doctorService.loginDoctor(email, password);
+        if (!doctor) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+        const token = doctor.generateAuthToken();
+        res.status(200).json({ token, doctor });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports.getDoctors = async (req, res, next) => {
     try {
         const doctors = await doctorService.getDoctors();

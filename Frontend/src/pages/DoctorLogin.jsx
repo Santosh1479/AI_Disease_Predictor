@@ -26,7 +26,7 @@ const DoctorLogin = () => {
         const data = response.data;
         setUser(data.doctor);
         localStorage.setItem("token", data.token);
-        navigate("/home");
+        navigate("/doctor-home");
       }
     } catch (error) {
       console.error("Error during login:", error);

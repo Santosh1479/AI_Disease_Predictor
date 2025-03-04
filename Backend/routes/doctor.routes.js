@@ -11,10 +11,19 @@ router.post('/create',
         body('email').isEmail().withMessage('Invalid email'),
         body('mobileNumber').isLength({ min: 10 }).withMessage('Mobile number is too short'),
         body('password').isLength({ min: 6 }).withMessage('Password is too short'),
-        body('hospital').notEmpty().withMessage('Hospital is required'),
+        body('hospital').isInt({ min: 1000 }).withMessage('Hospital ID must be at least 4 digits'),
         body('specialisation').notEmpty().withMessage('Specialisation is required')
     ],
     doctorController.createDoctor
+);
+
+// Doctor login
+router.post('/login',
+    [
+        body('email').isEmail().withMessage('Invalid email'),
+        body('password').isLength({ min: 6 }).withMessage('Password is too short')
+    ],
+    doctorController.loginDoctor
 );
 
 // Get all doctors

@@ -14,16 +14,22 @@ const io = socketio(server);
 app.set("view engine", "ejs");
 
 io.on("connection", (socket) => {
-  console.log("User connected");
+    socket.on("join_room", (room) => {
+        socket.join(room);
+        console.log(`User joined room: ${room}`);
+    });
 
-  socket.on("sendLocation", (data) => {
-    console.log("Location received:", data);
-    io.emit("receiveLocation", { id: socket.id, ...data });
-  });
+    socket.on("send_message", (data) => {
+        io.to(data.room).emit("receive_message", data);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Client disconnected");
+    });
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 server.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });

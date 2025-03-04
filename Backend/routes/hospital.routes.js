@@ -6,12 +6,13 @@ const hospitalController = require('../controllers/hospital.controller');
 // Create a new hospital
 router.post('/create',
     [
-        body('name').isLength({ min: 3 }).withMessage('Hospital name is too short'),
-        body('customerCare').isLength({ min: 10 }).withMessage('Customer care number is too short'),
+        body('_id').isInt({ min: 1000 }).withMessage('Hospital ID must be at least 4 digits'),
+        body('name').notEmpty().withMessage('Name is required'),
+        body('customerCare').notEmpty().withMessage('Customer care is required'),
         body('email').isEmail().withMessage('Invalid email'),
         body('specialisations').isArray().withMessage('Specialisations must be an array'),
-        body('latitude').isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude'),
-        body('longitude').isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude')
+        body('latitude').isNumeric().withMessage('Latitude must be a number'),
+        body('longitude').isNumeric().withMessage('Longitude must be a number')
     ],
     hospitalController.createHospital
 );

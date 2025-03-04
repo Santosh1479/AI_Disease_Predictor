@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 
 const doctorSchema = new mongoose.Schema({
     fullname: {
@@ -30,8 +31,7 @@ const doctorSchema = new mongoose.Schema({
         minlength: [6, "Password must be longer"]
     },
     hospital: {
-        type: Number, // Change this to a number
-        ref: 'Hospital',
+        type: Number,
         required: true
     },
     specialisation: {
@@ -39,6 +39,11 @@ const doctorSchema = new mongoose.Schema({
         required: true
     }
 });
+
+doctorSchema.methods.generateAuthToken = function () {
+    const token = jwt.sign({ _id: this._id, email: this.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    return token;
+};
 
 const doctorModel = mongoose.model('Doctor', doctorSchema);
 

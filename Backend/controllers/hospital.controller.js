@@ -7,13 +7,13 @@ module.exports.createHospital = async (req, res, next) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { id, name, customerCare, email, specialisations, latitude, longitude } = req.body;
+    const { _id, name, customerCare, email, specialisations, latitude, longitude } = req.body;
 
     try {
-        const hospital = await hospitalService.createHospital({ id, name, customerCare, email, specialisations, latitude, longitude });
+        const hospital = await hospitalService.createHospital({ _id, name, customerCare, email, specialisations, latitude, longitude });
         res.status(201).json(hospital);
     } catch (error) {
-        next(error);
+        res.status(400).json({ message: error.message });
     }
 };
 
