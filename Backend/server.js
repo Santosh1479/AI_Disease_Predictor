@@ -14,6 +14,8 @@ const io = socketio(server);
 app.set("view engine", "ejs");
 
 io.on("connection", (socket) => {
+    console.log('a user connected');
+
     socket.on("join_room", (room) => {
         socket.join(room);
         console.log(`User joined room: ${room}`);

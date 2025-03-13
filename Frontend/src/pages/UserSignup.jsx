@@ -22,9 +22,13 @@ const UserSignup = () => {
         password: pass,
         mobileNumber,
       });
-      console.log('User registered successfully:', response.data);
-      // Optionally, navigate to another page or show a success message
-    } catch (error) {
+      if (response.status === 200) {
+        const data = response.data;
+        setUser(data.user);
+        localStorage.setItem("token", data.token);
+        navigate("/home");
+      }
+        } catch (error) {
       if (error.response && error.response.data.message) {
         setError(error.response.data.message);
       } else {

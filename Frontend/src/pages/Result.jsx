@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
@@ -68,7 +67,10 @@ const Result = () => {
           doctors: filteredDoctors.filter((doctor) => doctor.hospital.toString() === hospital._id.toString())
         }));
 
-        console.log("Hospitals with doctors:", hospitalsWithDoctors);
+        // Filter out hospitals without specialized doctors
+        const filteredHospitals = hospitalsWithDoctors.filter(hospital => hospital.doctors.length > 0);
+
+        console.log("Hospitals with specialized doctors:", filteredHospitals);
 
         // Get user location
         navigator.geolocation.getCurrentPosition((position) => {
@@ -79,7 +81,7 @@ const Result = () => {
           setUserLocation(userLoc);
 
           // Calculate distance and sort hospitals
-          const sortedHospitals = hospitalsWithDoctors.map((hospital) => {
+          const sortedHospitals = filteredHospitals.map((hospital) => {
             const distance = getDistance(userLoc, {
               latitude: hospital.latitude,
               longitude: hospital.longitude,

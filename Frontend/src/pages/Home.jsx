@@ -88,8 +88,8 @@ const Home = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://127.0.0.1:5000/diagnosis`,
-        { input: combinedInput },
+        `http://127.0.0.1:5000/predict`,
+        { symptoms: combinedInput.split(",") },
         {
           headers: {
             Authorization: `Bearer ${token}`,

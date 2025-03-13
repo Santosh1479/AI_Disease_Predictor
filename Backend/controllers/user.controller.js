@@ -4,34 +4,34 @@ const { validationResult } = require('express-validator');
 const blacklistTokenModel = require('../models/blackListToken.model');
 
 module.exports.registerUser = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { fullname, email, password, mobileNumber } = req.body;
+
+  try {
+    const hashedpass = await userModel.hashPassword(password);
+
+    const user = await userservice.createUser({
+      firstname: fullname.firstname,
+      lastname: fullname.lastname,
+      email,
+      password: hashedpass,
+      mobileNumber,
+    });
+
+    const token = user.generateAuthToken();
+
+    res.status(201).json({ token, user });
+  } catch (error) {
+    if (error.message === 'Email already exists') {
+      return res.status(400).json({ message: error.message });
     }
-  
-    const { fullname, email, password, mobileNumber } = req.body;
-  
-    try {
-      const hashedpass = await userModel.hashPassword(password);
-  
-      const user = await userservice.createUser({
-        firstname: fullname.firstname,
-        lastname: fullname.lastname,
-        email,
-        password: hashedpass,
-        mobileNumber,
-      });
-  
-      const token = user.generateAuthToken();
-  
-      res.status(201).json({ token, user });
-    } catch (error) {
-      if (error.message === 'Email already exists') {
-        return res.status(400).json({ message: error.message });
-      }
-      next(error);
-    }
-  };
+    next(error);
+  }
+};
 
 module.exports.loginuser = async (req, res, next) => {
   const errors = validationResult(req);
