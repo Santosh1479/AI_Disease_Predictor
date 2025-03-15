@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 
+const socket = io('http://localhost:3000', {
+  withCredentials: true,
+});
+
 const DoctorHome = () => {
   const [messages, setMessages] = useState([]);
   const [room, setRoom] = useState("");
@@ -26,7 +30,7 @@ const DoctorHome = () => {
     const fetchMessages = async (doctorId) => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/messages/${doctorId}`
+          `${import.meta.env.VITE_BASE_URL}/messages/doctor/${doctorId}`
         );
         setMessages(response.data);
       } catch (error) {

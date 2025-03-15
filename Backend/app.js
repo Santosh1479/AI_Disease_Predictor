@@ -7,8 +7,9 @@ const connecttoDB = require('./db/db');
 const userRoutes = require('./routes/user.routes');
 const hospitalRoutes = require('./routes/hospital.routes');
 const doctorRoutes = require('./routes/doctor.routes');
-const messageRoutes = require('./routes/messages.routes');
+const messageRoutes = require('./routes/message.routes');
 const resultsRoutes = require('./routes/results.routes');
+const chatRoutes = require('./routes/chat.routes'); // Add chat routes
 
 connecttoDB();
 
@@ -40,14 +41,23 @@ app.use('/hospitals', hospitalRoutes);
 app.use('/doctors', doctorRoutes);
 app.use('/messages', messageRoutes);
 app.use('/results', resultsRoutes);
+app.use('/chat', chatRoutes); // Use chat routes
 
 io.on('connection', (socket) => {
   console.log('a user connected');
+
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User joined room: ${room}`);
+  });
+
+  socket.on('send_message', (data) => {
+    io.to(data.room).emit('receive_message', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });
 });
 
 module.exports = app;
-
-

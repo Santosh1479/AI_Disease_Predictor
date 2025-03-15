@@ -1,6 +1,7 @@
+// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Frontend\src\pages\Result.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const diseaseToSector = {
   "fungal infection": "Dermatology",
@@ -24,11 +25,11 @@ const diseaseToSector = {
   "typhoid": "Infectious Disease",
   "hepatitis a": "Gastroenterology",
   "hepatitis b": "Gastroenterology",
-  // Add more mappings as needed
 };
 
 const Result = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize useNavigate
   const { disease } = location.state || { disease: "" };
   const [predictionPercentage, setPredictionPercentage] = useState("");
   const [hospitals, setHospitals] = useState([]);
@@ -47,19 +48,13 @@ const Result = () => {
         const allHospitals = hospitalsResponse.data;
         const allDoctors = doctorsResponse.data;
 
-        console.log("Fetched hospitals:", allHospitals);
-        console.log("Fetched doctors:", allDoctors);
-
         // Normalize disease name
         const normalizedDisease = disease.toLowerCase().trim();
-        console.log("Normalized disease:", normalizedDisease);
 
         // Filter doctors by specialization
         const filteredDoctors = allDoctors.filter(
           (doctor) => doctor.specialisation === diseaseToSector[normalizedDisease]
         );
-
-        console.log("Filtered doctors:", filteredDoctors);
 
         // Map doctors to their respective hospitals
         const hospitalsWithDoctors = allHospitals.map((hospital) => ({
@@ -69,8 +64,6 @@ const Result = () => {
 
         // Filter out hospitals without specialized doctors
         const filteredHospitals = hospitalsWithDoctors.filter(hospital => hospital.doctors.length > 0);
-
-        console.log("Hospitals with specialized doctors:", filteredHospitals);
 
         // Get user location
         navigator.geolocation.getCurrentPosition((position) => {
@@ -111,12 +104,28 @@ const Result = () => {
     return R * c; // Distance in km
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (message.trim() !== "" && selectedDoctor !== "") {
-      console.log("Message sent:", message);
-      setMessage("");
+      try {
+        const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+        const userId = JSON.parse(atob(token.split('.')[1])).id; // Decode token to get user ID
+
+        // Create chat room
+        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/chat/create`, {
+          userId,
+          doctorId: selectedDoctor,
+        });
+
+        const { roomId } = response.data;
+
+        // Redirect to chat page
+        navigate(`/chat/${roomId}`, { state: { roomId, userId, doctorId: selectedDoctor } });
+      } catch (error) {
+        console.error("Failed to create chat room", error);
+      }
     }
   };
+
 
   const handlePhoneClick = (phone) => {
     const whatsappUrl = `https://wa.me/${phone}`;

@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import { useLocation } from 'react-router-dom';
 
-const socket = io('http://localhost:3000');
-
-const Chat = ({ room }) => {
+const Chat = () => {
+  const location = useLocation();
+  const { roomId, userId, doctorId } = location.state;
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const [author, setAuthor] = useState('User'); // Change as needed
+  const [author, setAuthor] = useState(userId); // Set author to userId
+
+  const socket = io('http://localhost:3000');
 
   useEffect(() => {
-    socket.emit('join_room', room);
+    socket.emit('join_room', roomId);
 
     socket.on('receive_message', (newMessage) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -18,13 +21,14 @@ const Chat = ({ room }) => {
     return () => {
       socket.disconnect();
     };
-  }, [room]);
+  }, [roomId]);
 
   const sendMessage = () => {
     if (message.trim() !== '') {
       const time = new Date().toLocaleTimeString();
-      const newMessage = { author, message, time, room };
+      const newMessage = { author, message, time, room: roomId };
       socket.emit('send_message', newMessage);
+      setMessages((prevMessages) => [...prevMessages, newMessage]); // Add the message to the local state
       setMessage('');
     }
   };
