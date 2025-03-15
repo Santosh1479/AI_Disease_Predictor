@@ -2,27 +2,28 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { jwtDecode } from "jwt-decode";
 
 const diseaseToSector = {
   "fungal infection": "Dermatology",
-  "allergy": "Dermatology",
-  "gerd": "Gastroenterology",
+  allergy: "Dermatology",
+  gerd: "Gastroenterology",
   "chronic cholestasis": "Gastroenterology",
   "drug reaction": "Dermatology",
   "peptic ulcer disease": "Gastroenterology",
-  "aids": "Infectious Disease",
-  "diabetes": "Endocrinology",
-  "gastroenteritis": "Gastroenterology",
+  aids: "Infectious Disease",
+  diabetes: "Endocrinology",
+  gastroenteritis: "Gastroenterology",
   "bronchial asthma": "Pulmonology",
-  "hypertension": "Cardiology",
-  "migraine": "Neurology",
+  hypertension: "Cardiology",
+  migraine: "Neurology",
   "cervical spondylosis": "Orthopedics",
   "paralysis (brain hemorrhage)": "Neurology",
-  "jaundice": "Gastroenterology",
-  "malaria": "Infectious Disease",
+  jaundice: "Gastroenterology",
+  malaria: "Infectious Disease",
   "chicken pox": "Infectious Disease",
-  "dengue": "Infectious Disease",
-  "typhoid": "Infectious Disease",
+  dengue: "Infectious Disease",
+  typhoid: "Infectious Disease",
   "hepatitis a": "Gastroenterology",
   "hepatitis b": "Gastroenterology",
 };
@@ -42,7 +43,7 @@ const Result = () => {
       try {
         const [hospitalsResponse, doctorsResponse] = await Promise.all([
           axios.get(`${import.meta.env.VITE_BASE_URL}/hospitals/all`),
-          axios.get(`${import.meta.env.VITE_BASE_URL}/doctors/all`)
+          axios.get(`${import.meta.env.VITE_BASE_URL}/doctors/all`),
         ]);
 
         const allHospitals = hospitalsResponse.data;
@@ -53,17 +54,22 @@ const Result = () => {
 
         // Filter doctors by specialization
         const filteredDoctors = allDoctors.filter(
-          (doctor) => doctor.specialisation === diseaseToSector[normalizedDisease]
+          (doctor) =>
+            doctor.specialisation === diseaseToSector[normalizedDisease]
         );
 
         // Map doctors to their respective hospitals
         const hospitalsWithDoctors = allHospitals.map((hospital) => ({
           ...hospital,
-          doctors: filteredDoctors.filter((doctor) => doctor.hospital.toString() === hospital._id.toString())
+          doctors: filteredDoctors.filter(
+            (doctor) => doctor.hospital.toString() === hospital._id.toString()
+          ),
         }));
 
         // Filter out hospitals without specialized doctors
-        const filteredHospitals = hospitalsWithDoctors.filter(hospital => hospital.doctors.length > 0);
+        const filteredHospitals = hospitalsWithDoctors.filter(
+          (hospital) => hospital.doctors.length > 0
+        );
 
         // Get user location
         navigator.geolocation.getCurrentPosition((position) => {
@@ -74,13 +80,15 @@ const Result = () => {
           setUserLocation(userLoc);
 
           // Calculate distance and sort hospitals
-          const sortedHospitals = filteredHospitals.map((hospital) => {
-            const distance = getDistance(userLoc, {
-              latitude: hospital.latitude,
-              longitude: hospital.longitude,
-            });
-            return { ...hospital, distance };
-          }).sort((a, b) => a.distance - b.distance);
+          const sortedHospitals = filteredHospitals
+            .map((hospital) => {
+              const distance = getDistance(userLoc, {
+                latitude: hospital.latitude,
+                longitude: hospital.longitude,
+              });
+              return { ...hospital, distance };
+            })
+            .sort((a, b) => a.distance - b.distance);
 
           setHospitals(sortedHospitals);
         });
@@ -98,8 +106,10 @@ const Result = () => {
     const dLon = (loc2.longitude - loc1.longitude) * (Math.PI / 180);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(loc1.latitude * (Math.PI / 180)) * Math.cos(loc2.latitude * (Math.PI / 180)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(loc1.latitude * (Math.PI / 180)) *
+        Math.cos(loc2.latitude * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
   };
@@ -107,25 +117,34 @@ const Result = () => {
   const sendMessage = async () => {
     if (message.trim() !== "" && selectedDoctor !== "") {
       try {
-        const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
-        const userId = JSON.parse(atob(token.split('.')[1])).id; // Decode token to get user ID
+        const token = localStorage.getItem("token");
+        if (token) {
+          const decodedToken = jwtDecode(token);
+          const userId = decodedToken._id;
+          console.log(userId); // Decode token to get user ID
+          console.log(selectedDoctor);
 
-        // Create chat room
-        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/chat/create`, {
-          userId,
-          doctorId: selectedDoctor,
-        });
+          // Create chat room
+          const response = await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/chat/create`,
+            {
+              userId,
+              doctorId: selectedDoctor,
+            }
+          );
 
-        const { roomId } = response.data;
+          const { roomId } = response.data;
 
-        // Redirect to chat page
-        navigate(`/chat/${roomId}`, { state: { roomId, userId, doctorId: selectedDoctor } });
+          // Redirect to chat page
+          navigate(`/chat/${roomId}`, {
+            state: { roomId, userId, doctorId: selectedDoctor },
+          });
+        }
       } catch (error) {
         console.error("Failed to create chat room", error);
       }
     }
   };
-
 
   const handlePhoneClick = (phone) => {
     const whatsappUrl = `https://wa.me/${phone}`;
@@ -143,8 +162,12 @@ const Result = () => {
         <div className="">
           <h2 className="text-xl font-semibold">Predicted Disease</h2>
           <p className="text-gray-800 text-xl">{disease}</p>
-          {predictionPercentage && <p className="text-gray-800">{predictionPercentage}%</p>}
-          <p className="text-gray-800">Sector: {diseaseToSector[disease.toLowerCase().trim()] || "Unknown"}</p>
+          {predictionPercentage && (
+            <p className="text-gray-800">{predictionPercentage}%</p>
+          )}
+          <p className="text-gray-800">
+            Sector: {diseaseToSector[disease.toLowerCase().trim()] || "Unknown"}
+          </p>
         </div>
       </div>
       <div className="bg-blue-100 h-screen rounded-xl mt-4 p-4">
@@ -155,7 +178,9 @@ const Result = () => {
           {hospitals.map((hospital, index) => (
             <li key={index} className="text-gray-700 mb-4">
               <div className="flex justify-between items-center">
-                <div className="font-bold">{hospital.name} ({hospital.distance.toFixed(2)} km)</div>
+                <div className="font-bold">
+                  {hospital.name} ({hospital.distance.toFixed(2)} km)
+                </div>
                 <button
                   onClick={() => handlePhoneClick(hospital.phone)}
                   className="text-blue-500 hover:text-blue-700"
@@ -170,11 +195,13 @@ const Result = () => {
                   onChange={(e) => setSelectedDoctor(e.target.value)}
                 >
                   <option value="">Select a doctor</option>
-                  {hospital.doctors && hospital.doctors.map((doctor, index) => (
-                    <option key={index} value={doctor._id}>
-                      {doctor.fullname.firstname} {doctor.fullname.lastname} - {doctor.specialisation}
-                    </option>
-                  ))}
+                  {hospital.doctors &&
+                    hospital.doctors.map((doctor, index) => (
+                      <option key={index} value={doctor._id}>
+                        {doctor.fullname.firstname} {doctor.fullname.lastname} -{" "}
+                        {doctor.specialisation}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="mt-2">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const socket = io('http://localhost:3000', {
   withCredentials: true,
@@ -9,22 +10,35 @@ const socket = io('http://localhost:3000', {
 const DoctorHome = () => {
   const [messages, setMessages] = useState([]);
   const [room, setRoom] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/users/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      if (!token) {
+        navigate("/doctor-login"); // Redirect to login if token is missing
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/users/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const doctorId = response.data._id;
+        setRoom(doctorId);
+        socket.emit("join_room", doctorId);
+        fetchMessages(doctorId);
+      } catch (error) {
+        console.error("Error fetching doctor profile:", error);
+        if (error.response && error.response.status === 401) {
+          navigate("/doctor-login"); // Redirect to login if token is invalid
         }
-      );
-      const doctorId = response.data._id;
-      setRoom(doctorId);
-      socket.emit("join_room", doctorId);
-      fetchMessages(doctorId);
+      }
     };
 
     const fetchMessages = async (doctorId) => {
@@ -47,7 +61,7 @@ const DoctorHome = () => {
     return () => {
       socket.off("receive_message");
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="container mx-auto p-4">
