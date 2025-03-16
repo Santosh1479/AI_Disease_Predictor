@@ -1,11 +1,12 @@
+// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Frontend\src\pages\DoctorLogin.jsx
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
 
 const DoctorLogin = () => {
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  const [email, setEmail] = useState("test4@doc.com");
+  const [pass, setPass] = useState("testpass");
   const { user, setUser } = useContext(UserDataContext);
   const navigate = useNavigate();
 

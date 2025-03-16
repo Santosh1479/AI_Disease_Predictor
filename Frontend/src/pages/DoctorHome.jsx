@@ -1,3 +1,4 @@
+// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Frontend\src\pages\DoctorHome.jsx
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
@@ -8,6 +9,7 @@ const socket = io('http://localhost:3000', {
 });
 
 const DoctorHome = () => {
+  const [chatRooms, setChatRooms] = useState([]);
   const [messages, setMessages] = useState([]);
   const [room, setRoom] = useState("");
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ const DoctorHome = () => {
 
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/users/profile`,
+          `${import.meta.env.VITE_BASE_URL}/doctors/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -32,7 +34,7 @@ const DoctorHome = () => {
         const doctorId = response.data._id;
         setRoom(doctorId);
         socket.emit("join_room", doctorId);
-        fetchMessages(doctorId);
+        fetchChatRooms(doctorId);
       } catch (error) {
         console.error("Error fetching doctor profile:", error);
         if (error.response && error.response.status === 401) {
@@ -41,14 +43,19 @@ const DoctorHome = () => {
       }
     };
 
-    const fetchMessages = async (doctorId) => {
+    const fetchChatRooms = async (doctorId) => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/messages/doctor/${doctorId}`
+          `${import.meta.env.VITE_BASE_URL}/chat/doctor-chat-rooms`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
-        setMessages(response.data);
+        setChatRooms(response.data);
       } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.error("Error fetching chat rooms:", error);
       }
     };
 
@@ -66,12 +73,26 @@ const DoctorHome = () => {
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Doctor's Dashboard</h2>
-      <div className="messages">
-        {messages.map((msg, index) => (
-          <div key={index} className="message">
+      <div className="chat-rooms">
+        <h3 className="text-xl font-bold mb-2">Chat Rooms</h3>
+        {chatRooms.map((room, index) => (
+          <div key={index} className="chat-room">
             <p>
-              <strong>{msg.author}</strong>: {msg.message} <em>{msg.time}</em>
+              <strong>Room ID:</strong> {room._id}
             </p>
+            <p>
+              <strong>User ID:</strong> {room.userId}
+            </p>
+            <p>
+              <strong>Messages:</strong>
+            </p>
+            <ul>
+              {room.messages.map((msg, msgIndex) => (
+                <li key={msgIndex}>
+                  <strong>{msg.author}</strong>: {msg.message} <em>{msg.time}</em>
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>

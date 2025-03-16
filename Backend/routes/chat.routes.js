@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const ChatRoom = require('../models/chatRoom.model');
+const { authDoctor } = require('../middlewares/auth.middleware');
+const chatController = require('../controllers/chat.controller');
 
 // Endpoint to create a new chat room
 router.post('/create', async (req, res) => {
@@ -17,5 +19,6 @@ router.post('/create', async (req, res) => {
         res.status(500).json({ error: 'Failed to create chat room' });
     }
 });
+router.get('/doctor-chat-rooms', authDoctor, chatController.getChatRoomsForDoctor);
 
 module.exports = router;
