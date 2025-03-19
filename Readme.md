@@ -67,6 +67,7 @@ Located at: `Backend/controllers/doctor.controller.js`
 ### Auth Middleware
 Located at: `Backend/middlewares/auth.middleware.js`
 - **authUser**: Middleware to authenticate a user using JWT
+- **authDoctor**: Middleware to authenticate a Doctor using JWT
 
 ## Database Connection
 
