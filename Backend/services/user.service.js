@@ -1,4 +1,3 @@
-// user.service.js
 const userModel = require('../models/user.models');
 
 module.exports.createUser = async ({ firstname, lastname, email, password, mobileNumber }) => {
@@ -12,15 +11,39 @@ module.exports.createUser = async ({ firstname, lastname, email, password, mobil
     throw new Error('Email already exists');
   }
 
+  const hashedPassword = await userModel.hashPassword(password);
+
   const user = await userModel.create({
     fullname: {
       firstname,
       lastname,
     },
     email,
-    password,
+    password: hashedPassword,
     mobileNumber,
   });
 
+  return user;
+};
+
+module.exports.loginUser = async (email, password) => {
+  const user = await userModel.findOne({ email }).select('+password');
+  if (!user) {
+    throw new Error('Invalid email or password');
+  }
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    throw new Error('Invalid email or password');
+  }
+
+  return user;
+};
+
+module.exports.getUserById = async (userId) => {
+  const user = await userModel.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
   return user;
 };

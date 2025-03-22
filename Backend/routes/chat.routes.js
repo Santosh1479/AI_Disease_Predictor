@@ -7,11 +7,11 @@ const chatController = require('../controllers/chat.controller');
 // Endpoint to create a new chat room
 router.post('/create', async (req, res) => {
     try {
-        const { userId, doctorId } = req.body;
-        if (!userId || !doctorId) {
-            return res.status(400).json({ error: 'User ID and Doctor ID are required' });
+        const { userId, userName, doctorId, doctorName } = req.body;
+        if (!userId || !userName || !doctorId || !doctorName) {
+            return res.status(400).json({ error: 'User ID, User Name, Doctor ID, and Doctor Name are required' });
         }
-        const newChatRoom = new ChatRoom({ userId, doctorId });
+        const newChatRoom = new ChatRoom({ userId, userName, doctorId, doctorName });
         await newChatRoom.save();
         res.status(201).json({ roomId: newChatRoom._id });
     } catch (error) {

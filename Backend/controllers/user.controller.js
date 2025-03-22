@@ -1,4 +1,3 @@
-// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Backend\controllers\user.controller.js
 const userService = require('../services/user.service');
 const { validationResult } = require('express-validator');
 
@@ -8,10 +7,10 @@ module.exports.registerUser = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { fullname, email, password, mobileNumber } = req.body;
+  const { firstname, lastname, email, password, mobileNumber } = req.body;
 
   try {
-    const user = await userService.registerUser({ fullname, email, password, mobileNumber });
+    const user = await userService.createUser({ firstname, lastname, email, password, mobileNumber });
     res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -28,9 +27,6 @@ module.exports.loginUser = async (req, res) => {
 
   try {
     const user = await userService.loginUser(email, password);
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
     const token = user.generateAuthToken();
     res.status(200).json({ token, user });
   } catch (error) {
