@@ -41,6 +41,7 @@ const Result = () => {
     const fetchHospitalsAndDoctors = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log(token);
         const [hospitalsResponse, doctorsResponse] = await Promise.all([
           axios.get(`${import.meta.env.VITE_BASE_URL}/hospitals/all`, {
             headers: {
@@ -163,7 +164,8 @@ const Result = () => {
     const whatsappUrl = `https://wa.me/${phone}`;
     if (window.confirm("Do you want to make a call?")) {
       window.location.href = `tel:${phone}`;
-    } else {
+    }
+    {
       window.open(whatsappUrl, "_blank");
     }
   };
