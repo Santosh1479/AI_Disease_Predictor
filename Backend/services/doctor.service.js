@@ -1,14 +1,12 @@
-// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Backend\services\doctor.service.js
-const doctorModel = require('../models/doctor.model');
-const bcrypt = require('bcrypt');
+const doctorModel = require('../models/doctor.model.js');
 
 module.exports.loginDoctor = async (email, password) => {
-  const doctor = await doctorModel.findOne({ email });
+  const doctor = await doctorModel.findOne({ email }).select('+password');
   if (!doctor) {
     throw new Error('Invalid email or password');
   }
 
-  const isMatch = await bcrypt.compare(password, doctor.password);
+  const isMatch = await doctor.comparePassword(password);
   if (!isMatch) {
     throw new Error('Invalid email or password');
   }
@@ -16,6 +14,15 @@ module.exports.loginDoctor = async (email, password) => {
   return doctor;
 };
 
-module.exports.getDoctorById = async (id) => {
-  return await doctorModel.findById(id);
+module.exports.getDoctorById = async (doctorId) => {
+  const doctor = await doctorModel.findById(doctorId);
+  if (!doctor) {
+    throw new Error('Doctor not found');
+  }
+  return doctor;
+};
+
+module.exports.getAllDoctors = async () => {
+  const doctors = await doctorModel.find();
+  return doctors;
 };

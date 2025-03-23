@@ -1,8 +1,7 @@
-// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Backend\routes\doctor.routes.js
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { authDoctor } = require('../middlewares/auth.middleware');
+const { authDoctor, authUser, authUserOrDoctor } = require('../middlewares/auth.middleware');
 const doctorController = require('../controllers/doctor.controller');
 
 // Doctor login
@@ -13,5 +12,14 @@ router.post('/login', [
 
 // Get doctor profile
 router.get('/profile', authDoctor, doctorController.getProfile);
+
+// Get doctor by ID
+router.get('/:doctorId', authDoctor, doctorController.getDoctorById);
+
+// Get all doctors
+router.get('/all', authUserOrDoctor, doctorController.getAllDoctors);
+
+// Doctor logout
+router.post('/logout', authDoctor, doctorController.logoutDoctor);
 
 module.exports = router;

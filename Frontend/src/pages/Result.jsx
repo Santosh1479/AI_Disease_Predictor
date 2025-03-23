@@ -1,7 +1,6 @@
-// filepath: c:\Users\Santosh\Desktop\AI_Disease_Predictor\Frontend\src\pages\Result.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 const diseaseToSector = {
@@ -30,7 +29,7 @@ const diseaseToSector = {
 
 const Result = () => {
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const { disease } = location.state || { disease: "" };
   const [predictionPercentage, setPredictionPercentage] = useState("");
   const [hospitals, setHospitals] = useState([]);
@@ -41,9 +40,18 @@ const Result = () => {
   useEffect(() => {
     const fetchHospitalsAndDoctors = async () => {
       try {
+        const token = localStorage.getItem("token");
         const [hospitalsResponse, doctorsResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_BASE_URL}/hospitals/all`),
-          axios.get(`${import.meta.env.VITE_BASE_URL}/doctors/all`),
+          axios.get(`${import.meta.env.VITE_BASE_URL}/hospitals/all`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          axios.get(`${import.meta.env.VITE_BASE_URL}/doctors/all`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
         ]);
 
         const allHospitals = hospitalsResponse.data;
@@ -130,6 +138,11 @@ const Result = () => {
             {
               userId,
               doctorId: selectedDoctor,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             }
           );
 
