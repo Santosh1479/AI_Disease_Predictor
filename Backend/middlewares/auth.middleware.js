@@ -49,12 +49,10 @@ module.exports.authUserOrDoctor = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await userModel.findById(decoded._id);
+    console.log(user);
     const doctor = await doctorModel.findById(decoded._id);
-
     if (user) {
-      req.user = user;
     } else if (doctor) {
-      req.doctor = doctor;
     } else {
       return res.status(401).json({ message: 'Authorization denied' });
     }

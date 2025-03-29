@@ -1,5 +1,40 @@
 const doctorService = require('../services/doctor.service');
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+
+
+module.exports.createDoctor = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { firstname, lastname, email, password, mobileNumber, hospital, specialisation } = req.body;
+
+    // Validate hospital as a number
+    if (isNaN(hospital)) {
+      return res.status(400).json({ message: 'Invalid hospital ID. It must be a number.' });
+    }
+
+    // Construct fullname
+    const fullname = { firstname, lastname };
+
+    // Pass the constructed fullname along with other data
+    const doctor = await doctorService.createDoctor({
+      fullname,
+      email,
+      password,
+      mobileNumber,
+      hospital: Number(hospital), // Ensure hospital is a number
+      specialisation,
+    });
+
+    res.status(201).json({ message: 'Doctor created successfully', doctor });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 module.exports.loginDoctor = async (req, res) => {
   const errors = validationResult(req);

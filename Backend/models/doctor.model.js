@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const doctorSchema = new mongoose.Schema({
@@ -24,9 +25,10 @@ const doctorSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    select: false,
   },
   hospital: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Number,
     ref: 'Hospital',
     required: true,
   },
@@ -38,9 +40,17 @@ const doctorSchema = new mongoose.Schema({
 
 doctorSchema.methods.generateAuthToken = function () {
   const token = jwt.sign({ _id: this._id, email: this.email }, process.env.JWT_SECRET, {
-    expiresIn: '1h',
+    expiresIn: '24h',
   });
   return token;
+};
+
+doctorSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+doctorSchema.statics.hashPassword = async function (password) {
+  return await bcrypt.hash(password, 10);
 };
 
 const Doctor = mongoose.model('Doctor', doctorSchema);
