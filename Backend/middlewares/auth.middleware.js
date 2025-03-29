@@ -48,16 +48,22 @@ module.exports.authUserOrDoctor = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded Token:', decoded); // Log the decoded token
+
     const user = await userModel.findById(decoded._id);
-    console.log(user);
+    console.log('User:', user); // Log the user
+
     const doctor = await doctorModel.findById(decoded._id);
-    if (user) {
-    } else if (doctor) {
+    console.log('Doctor:', doctor); // Log the doctor
+
+    if (user || doctor) {
+      req.user = user || doctor; // Attach the user or doctor to the request
+      next();
     } else {
       return res.status(401).json({ message: 'Authorization denied' });
     }
-    next();
   } catch (error) {
+    console.error('Token Verification Error:', error); // Log the error
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

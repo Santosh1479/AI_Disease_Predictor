@@ -4,7 +4,6 @@ const { body } = require('express-validator');
 const { authDoctor, authUserOrDoctor } = require('../middlewares/auth.middleware');
 const doctorController = require('../controllers/doctor.controller');
 
-
 router.post('/create', [
   body('firstname').notEmpty().withMessage('First name is required'),
   body('lastname').notEmpty().withMessage('Last name is required'),
@@ -21,14 +20,14 @@ router.post('/login', [
   body('password').isLength({ min: 6 }).withMessage('Password is too short')
 ], doctorController.loginDoctor);
 
+// Get all doctors (move this route before the dynamic :doctorId route)
+router.get('/all', authUserOrDoctor, doctorController.getAllDoctors);
+
 // Get doctor profile
 router.get('/profile', authDoctor, doctorController.getProfile);
 
 // Get doctor by ID
 router.get('/:doctorId', authDoctor, doctorController.getDoctorById);
-
-// Get all doctors
-router.get('/all', authUserOrDoctor, doctorController.getAllDoctors);
 
 // Doctor logout
 router.post('/logout', authDoctor, doctorController.logoutDoctor);
