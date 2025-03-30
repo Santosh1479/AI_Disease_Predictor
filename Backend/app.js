@@ -9,7 +9,7 @@ const hospitalRoutes = require('./routes/hospital.routes');
 const doctorRoutes = require('./routes/doctor.routes');
 const messageRoutes = require('./routes/message.routes');
 const resultsRoutes = require('./routes/results.routes');
-const chatRoutes = require('./routes/chat.routes'); // Add chat routes
+const chatRoutes = require('./routes/chatRoom.routes'); // Add chat routes
 
 connecttoDB();
 

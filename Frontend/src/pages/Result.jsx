@@ -27,10 +27,10 @@ const diseaseToSector = {
   "hepatitis b": "Gastroenterology",
 };
 
-const Result = () => {
+const Result = (props) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { disease } = location.state || { disease: "" };
+  const { disease, username } = location.state; // Retrieve username
   const [predictionPercentage, setPredictionPercentage] = useState("");
   const [hospitals, setHospitals] = useState([]);
   const [message, setMessage] = useState("");
@@ -38,6 +38,7 @@ const Result = () => {
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
+    console.log("Username:", username); // Log the username to verify
     const fetchHospitalsAndDoctors = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -130,15 +131,34 @@ const Result = () => {
         if (token) {
           const decodedToken = jwtDecode(token);
           const userId = decodedToken._id;
-          console.log(userId); // Decode token to get user ID
-          console.log(selectedDoctor);
+          const userName = location.state.username; // Assuming the token contains the user's name
+          const doctor = hospitals
+            .flatMap((hospital) => hospital.doctors)
+            .find((doc) => doc._id === selectedDoctor);
+
+          if (!doctor) {
+            console.error("Doctor not found");
+            return;
+          }
+
+          const doctorName = `${doctor.fullname.firstname} ${doctor.fullname.lastname}`;
+
+          // Log the data being sent
+          console.log({
+            userId,
+            userName,
+            doctorId: selectedDoctor,
+            doctorName,
+          });
 
           // Create chat room
           const response = await axios.post(
             `${import.meta.env.VITE_BASE_URL}/chat/create`,
             {
               userId,
+              userName,
               doctorId: selectedDoctor,
+              doctorName,
             },
             {
               headers: {

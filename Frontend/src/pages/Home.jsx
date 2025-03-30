@@ -40,9 +40,9 @@ const translations = {
 
 const Home = () => {
   const [name, setName] = useState("");
-  const [symptoms, setSymptoms] = useState("");
+  const [symptoms, setSymptoms] = useState("infection,itching, skin_rash, nodal_skin_eruptions");
   const [image, setImage] = useState(null);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState("HI");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { language, setLanguage } = useContext(LanguageContext);
@@ -96,7 +96,9 @@ const Home = () => {
           },
         }
       );
-      navigate("/results", { state: { disease: response.data.disease } });
+      navigate("/results", {
+        state: { disease: response.data.disease, username: name }, // Pass username
+      });
     } catch (error) {
       console.error("Failed to submit diagnosis", error);
     } finally {
@@ -104,32 +106,34 @@ const Home = () => {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // const handleImageUpload = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
 
-    const formData = new FormData();
-    formData.append("image", image);
+  //   const formData = new FormData();
+  //   formData.append("image", image);
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://127.0.0.1:5000/upload_image`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      navigate("/results", { state: { disease: response.data.disease } });
-    } catch (error) {
-      console.error("Failed to upload image", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await axios.post(
+  //       `http://127.0.0.1:5000/upload_image`,
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     navigate("/results", {
+  //       state: { disease: response.data.disease, username: name },
+  //     });
+  //   } catch (error) {
+  //     console.error("Failed to upload image", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleLogout = async () => {
     try {
