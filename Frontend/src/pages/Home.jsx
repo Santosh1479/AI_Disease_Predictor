@@ -96,6 +96,7 @@ const Home = () => {
           },
         }
       );
+      console.log(name)
       navigate("/results", {
         state: { disease: response.data.disease, username: name }, // Pass username
       });

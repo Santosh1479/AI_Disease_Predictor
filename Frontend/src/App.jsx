@@ -10,7 +10,7 @@ import Result from "./pages/Result";
 import UserProtectWrapper from "./pages/UserProtectWrapper";
 import UserLogout from "./pages/UserLogout";
 import DoctorHome from "./pages/DoctorHome";
-import Chat from "./pages/Chat"; // Import Chat component
+import ChatPage from "./pages/ChatPage"; // Import Chat component
 import { LanguageProvider } from "./context/LanguageContext";
 
 const App = () => {
@@ -59,7 +59,7 @@ const App = () => {
             path="/chat/:roomId"
             element={
               <UserProtectWrapper>
-                <Chat />
+                <ChatPage />
               </UserProtectWrapper>
             }
           />

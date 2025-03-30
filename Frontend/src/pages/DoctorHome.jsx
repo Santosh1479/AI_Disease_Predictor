@@ -28,7 +28,8 @@ const DoctorHome = () => {
             },
           }
         );
-        console.log("Doctor profile:", response.data); // Log the profile for debugging
+        console.log("Doctor profile:", response.data);
+        fetchChatRooms(); // Log the profile for debugging
       } catch (error) {
         console.error("Error fetching doctor profile:", {
           message: error.message,
@@ -61,11 +62,6 @@ const DoctorHome = () => {
           error.response?.data || error.message
         );
       }
-      console.error("Error fetching chat rooms:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
     };
 
     fetchDoctorProfile();
@@ -90,16 +86,27 @@ const DoctorHome = () => {
     };
   }, [navigate]);
 
+  const handleChatRoomClick = (roomId) => {
+    navigate(`/chat/${roomId}`); // Navigate to the chat page with the room ID
+  };
+
   return (
     <div className="container mx-auto p-4 flex h-screen">
       <div className="w-full border-r border-gray-300 overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">Contacts</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">Texts</h2>
         {chatRooms.map((room, index) => (
-          <div key={index} className="p-2 cursor-pointer hover:bg-gray-200">
+          <div
+            key={index}
+            className="p-2 cursor-pointer hover:bg-gray-200"
+            onClick={() => handleChatRoomClick(room._id)}
+          >
             {room.userName && (
-              <p>
-                <strong>Username:</strong> {room.userName}
-              </p>
+              <div className="flex w-90% bg-gray-200 h-12 items-center rounded-3xl gap-2">
+                <div className="h-10 w-10 ml-4 bg-gray-300 flex items-center justify-center rounded-full">
+                  <i className="text-2xl font-bold ri-user-line"></i>
+                </div>
+                <h3 className="text-2xl font-semibold">{room.userName}</h3>
+              </div>
             )}
           </div>
         ))}
