@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const socket = io("http://localhost:3000", {
+const socket = io(`${import.meta.env.VITE_BASE_URL}`, {
   withCredentials: true,
 });
 

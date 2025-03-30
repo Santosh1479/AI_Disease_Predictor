@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 
 export const SocketContext = createContext();
 
-const socket = io(`http://localhost:3000/page`); 
+const socket = io(`${import.meta.env.SOCKET}/page`); 
 
 const SocketProvider = ({ children }) => {
     useEffect(() => {

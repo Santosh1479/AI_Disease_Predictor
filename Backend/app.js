@@ -17,16 +17,15 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    origin: '*',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
   },
 });
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from this origin
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true, // Allow cookies to be sent
+  origin: '*', // Allow all origins
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'], // Allow all standard HTTP methods
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -9,7 +9,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [author, setAuthor] = useState(userId); // Set author to userId
 
-  const socket = io('http://localhost:3000');
+  const socket = io(`${import.meta.env.SOCKET}`);
 
   useEffect(() => {
     socket.emit('join_room', roomId);

@@ -5,15 +5,17 @@ const app = require("./app.js");
 const socketio = require('socket.io');
 const express = require("express");
 const path = require("path");
+import { io } from "socket.io-client";
 
 const port = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    origin: '*',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: true,
+    transports: ["websocket"],
   },
 });
 
