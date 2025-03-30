@@ -17,10 +17,15 @@ module.exports.createChatRoom = async (req, res) => {
 
 module.exports.getChatRoomsForDoctor = async (req, res) => {
   try {
-    const doctorId = req.user._id; // Assuming the doctor is authenticated
-    const chatRooms = await ChatRoom.find({ doctorId });
+    if (!req.user || !req.user._id) {
+      return res.status(400).json({ message: 'Doctor ID is missing' });
+    }
+
+    const doctorId = req.user._id; // Extract doctor ID
+    const chatRooms = await ChatRoom.find({ doctorId }); // Fetch chat rooms
     res.status(200).json(chatRooms);
   } catch (error) {
+    console.error('Error fetching chat rooms:', error);
     res.status(500).json({ message: error.message });
   }
 };

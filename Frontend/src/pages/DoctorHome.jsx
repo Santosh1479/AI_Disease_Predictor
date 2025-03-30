@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const socket = io('http://localhost:3000', {
+const socket = io("http://localhost:3000", {
   withCredentials: true,
 });
 
@@ -24,35 +24,48 @@ const DoctorHome = () => {
           `${import.meta.env.VITE_BASE_URL}/doctors/profile`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${token}`, // Send token
             },
           }
         );
-        const doctorId = response.data._id;
-        socket.emit("join_room", doctorId);
-        fetchChatRooms(doctorId);
+        console.log("Doctor profile:", response.data); // Log the profile for debugging
       } catch (error) {
-        console.error("Error fetching doctor profile:", error);
-        if (error.response && error.response.status === 401) {
-          navigate("/doctor-login"); // Redirect to login if token is invalid
-        }
+        console.error("Error fetching doctor profile:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
       }
     };
 
-    const fetchChatRooms = async (doctorId) => {
+    const fetchChatRooms = async () => {
       try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found");
+          return;
+        }
+
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/chat/doctor-chat-rooms`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${token}`, // Send token
             },
           }
         );
-        setChatRooms(response.data);
+        setChatRooms(response.data); // Update state with chat rooms
       } catch (error) {
-        console.error("Error fetching chat rooms:", error);
+        console.error(
+          "Error fetching chat rooms:",
+          error.response?.data || error.message
+        );
       }
+      console.error("Error fetching chat rooms:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
     };
 
     fetchDoctorProfile();
@@ -82,10 +95,7 @@ const DoctorHome = () => {
       <div className="w-full border-r border-gray-300 overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4">Contacts</h2>
         {chatRooms.map((room, index) => (
-          <div
-            key={index}
-            className="p-2 cursor-pointer hover:bg-gray-200"
-          >
+          <div key={index} className="p-2 cursor-pointer hover:bg-gray-200">
             {room.userName && (
               <p>
                 <strong>Username:</strong> {room.userName}

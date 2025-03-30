@@ -21,22 +21,44 @@ module.exports.authUser = async (req, res, next) => {
   }
 };
 
-module.exports.authDoctor = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  if (!authHeader) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
-  }
+// module.exports.authDoctor = async (req, res, next) => {
+//   const authHeader = req.header('Authorization');
+//   if (!authHeader) {
+//     return res.status(401).json({ message: 'No token, authorization denied' });
+//   }
 
-  const token = authHeader.replace('Bearer ', '');
+//   const token = authHeader.replace('Bearer ', '');
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     req.doctor = await doctorModel.findById(decoded._id);
+//     if (!req.doctor) {
+//       return res.status(401).json({ message: 'Authorization denied' });
+//     }
+//     next();
+//   } catch (error) {
+//     res.status(401).json({ message: 'Token is not valid' });
+//   }
+// };
+
+module.exports.authDoctor = async (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.doctor = await doctorModel.findById(decoded._id);
-    if (!req.doctor) {
-      return res.status(401).json({ message: 'Authorization denied' });
+    const token = req.headers.authorization?.split(' ')[1]; // Extract token
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
     }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify token
+    const doctor = await doctorModel.findById(decoded._id); // Find doctor by ID in token
+    if (!doctor) {
+      return res.status(401).json({ message: 'Doctor not found' });
+    }
+
+    req.user = doctor; // Attach doctor to request
+    console.log(doctor);
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Token is not valid' });
+    console.error('Error in authDoctor middleware:', error);
+    res.status(500).json({ message: 'Authentication failed' });
   }
 };
 

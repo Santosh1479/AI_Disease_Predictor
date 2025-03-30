@@ -55,13 +55,14 @@ module.exports.loginDoctor = async (req, res) => {
 
 module.exports.getProfile = async (req, res) => {
   try {
-    const doctor = await doctorService.getDoctorById(req.doctor._id);
-    if (!doctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+    if (!req.user) {
+      return res.status(400).json({ message: 'Doctor not authenticated' });
     }
-    res.status(200).json(doctor);
+
+    res.status(200).json(req.user); // Return the authenticated doctor's profile
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching doctor profile:', error);
+    res.status(500).json({ message: 'Failed to fetch doctor profile' });
   }
 };
 
