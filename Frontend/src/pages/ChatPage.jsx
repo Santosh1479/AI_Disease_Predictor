@@ -3,9 +3,9 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
-const socket = io(import.meta.env.VITE_SOCKET, {
-  withCredentials: true, // Include credentials in the request
-  transports: ["websocket", "polling"], // Use WebSocket and fallback to polling
+const socket = io(import.meta.env.SOCKET, {
+  withCredentials: true, // Match backend CORS settings
+  transports: ["websocket", "polling"], // Ensure compatibility
 });
 
 socket.on("connect", () => {

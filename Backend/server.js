@@ -1,44 +1,40 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const http = require("http");
-const app = require("./app.js");
+const http = require('http');
+const app = require('./app.js'); // Import the Express app
 const socketio = require('socket.io');
-const express = require("express");
-const path = require("path");
-const cors = require("cors");
 const port = process.env.PORT || 3000;
-
+// Create the HTTP server
 const server = http.createServer(app);
+
+// Initialize Socket.IO with CORS configuration
 const io = socketio(server, {
   cors: {
-    origin: 'http://localhost:5173', // 
+    origin: 'http://localhost:5173', // Frontend URL
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    credentials: true,
-    transports: ["websocket"],
+    credentials: true, // Allow cookies and credentials
   },
 });
 
-app.set("view engine", "ejs");
+// Handle WebSocket connections
+io.on('connection', (socket) => {
+  console.log('A user connected');
 
-io.on("connection", (socket) => {
-    console.log('a user connected');
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User joined room: ${room}`);
+  });
 
-    socket.on("join_room", (room) => {
-        socket.join(room);
-        console.log(`User joined room: ${room}`);
-    });
+  socket.on('send_message', (data) => {
+    io.to(data.room).emit('receive_message', data);
+  });
 
-    socket.on("send_message", (data) => {
-        io.to(data.room).emit("receive_message", data);
-    });
-
-    socket.on("disconnect", () => {
-        console.log("Client disconnected");
-    });
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-
+// Start the server
 server.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });

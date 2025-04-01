@@ -3,8 +3,9 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const socket = io(`${import.meta.env.VITE_BASE_URL}`, {
-  withCredentials: true,
+const socket = io(import.meta.env.SOCKET, {
+  withCredentials: true, // Match backend CORS settings
+  transports: ["websocket", "polling"], // Ensure compatibility
 });
 
 const DoctorHome = () => {
