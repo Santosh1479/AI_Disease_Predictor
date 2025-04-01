@@ -54,7 +54,6 @@ module.exports.authDoctor = async (req, res, next) => {
     }
 
     req.user = doctor; // Attach doctor to request
-    console.log(doctor);
     next();
   } catch (error) {
     console.error('Error in authDoctor middleware:', error);

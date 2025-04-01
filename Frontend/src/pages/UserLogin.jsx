@@ -18,6 +18,7 @@ const UserLogin = () => {
     };
 
     try {
+      console.log(`${import.meta.env.VITE_BASE_URL}/users/login`);
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/users/login`,
         userData

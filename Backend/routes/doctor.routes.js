@@ -24,7 +24,7 @@ router.post('/login', [
 router.get('/all', authUserOrDoctor, doctorController.getAllDoctors);
 
 // Get doctor profile
-router.get('/profile', authDoctor, (req, res) => {
+router.get('/profile', authUserOrDoctor, (req, res) => {
   console.log('Authenticated doctor:', req.user);
   res.status(200).json(req.user);
 });

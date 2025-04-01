@@ -27,22 +27,19 @@ const diseaseToSector = {
   "hepatitis b": "Gastroenterology",
 };
 
-const Result = (props) => {
+const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { disease, username } = location.state; // Retrieve username
-  const [predictionPercentage, setPredictionPercentage] = useState("");
+  const { disease, username } = location.state; // Retrieve username and disease
   const [hospitals, setHospitals] = useState([]);
   const [message, setMessage] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
-    console.log("Username:", username); // Log the username to verify
     const fetchHospitalsAndDoctors = async () => {
       try {
         const token = localStorage.getItem("token");
-        console.log(token);
         const [hospitalsResponse, doctorsResponse] = await Promise.all([
           axios.get(`${import.meta.env.VITE_BASE_URL}/hospitals/all`, {
             headers: {
@@ -131,7 +128,7 @@ const Result = (props) => {
         if (token) {
           const decodedToken = jwtDecode(token);
           const userId = decodedToken._id;
-          const userName = location.state.username; // Assuming the token contains the user's name
+          const userName = username; // Assuming username is passed via location.state
           const doctor = hospitals
             .flatMap((hospital) => hospital.doctors)
             .find((doc) => doc._id === selectedDoctor);
@@ -142,14 +139,6 @@ const Result = (props) => {
           }
 
           const doctorName = `${doctor.fullname.firstname} ${doctor.fullname.lastname}`;
-
-          // Log the data being sent
-          console.log({
-            userId,
-            userName,
-            doctorId: selectedDoctor,
-            doctorName,
-          });
 
           // Create chat room
           const response = await axios.post(
@@ -171,7 +160,7 @@ const Result = (props) => {
 
           // Redirect to chat page
           navigate(`/chat/${roomId}`, {
-            state: { roomId, userId, doctorId: selectedDoctor },
+            state: { roomId, userId, doctorId: selectedDoctor, doctorName },
           });
         }
       } catch (error) {
@@ -180,48 +169,25 @@ const Result = (props) => {
     }
   };
 
-  const handlePhoneClick = (phone) => {
-    const whatsappUrl = `https://wa.me/${phone}`;
-    if (window.confirm("Do you want to make a call?")) {
-      window.location.href = `tel:${phone}`;
-    }
-    {
-      window.open(whatsappUrl, "_blank");
-    }
-  };
-
   return (
     <div className="container mx-auto p-4">
-      <div className="bg-blue-500 text-white p-4 rounded shadow-md h-1/4 w-full">
+      <div className="bg-blue-500 text-white p-4 rounded shadow-md">
         <h1 className="text-2xl font-bold mb-4">Diagnosis Result:</h1>
-        <div className="">
-          <h2 className="text-xl font-semibold">Predicted Disease</h2>
-          <p className="text-gray-800 text-xl">{disease}</p>
-          {predictionPercentage && (
-            <p className="text-gray-800">{predictionPercentage}%</p>
-          )}
-          <p className="text-gray-800">
-            Sector: {diseaseToSector[disease.toLowerCase().trim()] || "Unknown"}
-          </p>
-        </div>
+        <h2 className="text-xl font-semibold">Predicted Disease</h2>
+        <p className="text-gray-800 text-xl">{disease}</p>
+        <p className="text-gray-800">
+          Sector: {diseaseToSector[disease.toLowerCase().trim()] || "Unknown"}
+        </p>
       </div>
-      <div className="bg-blue-100 h-screen rounded-xl mt-4 p-4">
+      <div className="bg-blue-100 rounded-xl mt-4 p-4">
         <h2 className="text-lg font-semibold mb-4">
           Hospitals with Specialized Treatment
         </h2>
         <ul className="list-disc list-inside">
           {hospitals.map((hospital, index) => (
             <li key={index} className="text-gray-700 mb-4">
-              <div className="flex justify-between items-center">
-                <div className="font-bold">
-                  {hospital.name} ({hospital.distance.toFixed(2)} km)
-                </div>
-                <button
-                  onClick={() => handlePhoneClick(hospital.phone)}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  <i className="ri-phone-line text-xl font-bold pl-10"></i>
-                </button>
+              <div className="font-bold">
+                {hospital.name} ({hospital.distance.toFixed(2)} km)
               </div>
               <div>{hospital.address}</div>
               <div className="mt-2">

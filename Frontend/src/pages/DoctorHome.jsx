@@ -4,8 +4,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const socket = io(import.meta.env.SOCKET, {
-  withCredentials: true, // Match backend CORS settings
-  transports: ["websocket", "polling"], // Ensure compatibility
 });
 
 const DoctorHome = () => {

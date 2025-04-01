@@ -59,7 +59,18 @@ module.exports.getProfile = async (req, res) => {
       return res.status(400).json({ message: 'Doctor not authenticated' });
     }
 
-    res.status(200).json(req.user); // Return the authenticated doctor's profile
+    // Extract the required fields from the authenticated doctor's profile
+    const doctorProfile = {
+      id: req.user._id,
+      firstname: req.user.fullname.firstname,
+      lastname: req.user.fullname.lastname,
+      email: req.user.email,
+      mobileNumber: req.user.mobileNumber,
+      hospital: req.user.hospital,
+      specialisation: req.user.specialisation,
+    };
+
+    res.status(200).json(doctorProfile); // Return the doctor's profile
   } catch (error) {
     console.error('Error fetching doctor profile:', error);
     res.status(500).json({ message: 'Failed to fetch doctor profile' });
