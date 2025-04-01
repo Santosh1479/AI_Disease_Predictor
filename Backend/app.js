@@ -24,8 +24,9 @@ const io = socketIo(server, {
 });
 
 app.use(cors({
-  origin: '*', // Allow all origins
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'], // Allow all standard HTTP methods
+  origin: 'http://localhost:5173', // Allow all origins
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'], // Allow standard HTTP methods
+  credentials: true, // Allow cookies and credentials
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -1,11 +1,13 @@
-
+const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
 function connecttoDB() {
-    mongoose.connect("mongodb://localhost:27017/AI_Disease_Prediction", 
-    ).then(() => {
-        console.log("connec db done")
-    }).catch(err => console.log(err));
+    mongoose.connect(`${process.env.MONGO_URI}/AI_Disease_Prediction`, {
+    }).then(() => {
+        console.log("Connected to MongoDB");
+    }).catch(err => {
+        console.error("Error connecting to MongoDB:", err);
+    });
 }
 
 module.exports = connecttoDB;

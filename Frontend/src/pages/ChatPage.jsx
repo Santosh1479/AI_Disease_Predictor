@@ -3,8 +3,13 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
-const socket = io(`${import.meta.env.SOCKET}`, {
-  withCredentials: true,
+const socket = io(import.meta.env.VITE_SOCKET, {
+  withCredentials: true, // Include credentials in the request
+  transports: ["websocket", "polling"], // Use WebSocket and fallback to polling
+});
+
+socket.on("connect", () => {
+  console.log("Connected to Socket.IO server");
 });
 
 const ChatPage = () => {
@@ -61,9 +66,9 @@ const ChatPage = () => {
       time: new Date().toLocaleTimeString(),
     };
 
-    socket.emit("send_message", messageData); // Emit the message to the server
-    setMessages((prevMessages) => [...prevMessages, messageData]); // Update local messages
-    setNewMessage(""); // Clear the input field
+    socket.emit("send_message", messageData);
+    setMessages((prevMessages) => [...prevMessages, messageData]);
+    setNewMessage("");
   };
 
   return (

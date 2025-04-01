@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import UserContext from "../context/UserContext";
 import "remixicon/fonts/remixicon.css";
 import { LanguageContext } from "../context/LanguageContext";
 
@@ -39,7 +40,7 @@ const translations = {
 };
 
 const Home = () => {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(UserContext.user);
   const [symptoms, setSymptoms] = useState("infection,itching, skin_rash, nodal_skin_eruptions");
   const [image, setImage] = useState(null);
   const [description, setDescription] = useState("HI");
