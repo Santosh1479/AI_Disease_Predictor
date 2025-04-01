@@ -3,81 +3,68 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { DoctorContext } from "../context/DoctorContext";
+import { UserDataContext } from "../context/UserContext"; // Import UserDataContext
 
-const socket = io(import.meta.env.SOCKET, {});
-
-socket.on("connect", () => {
-  console.log("Connected to Socket.IO server");
-});
+const socket = io(import.meta.env.VITE_SOCKET_URL);
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
-  const { doctorDetails, setDoctorDetails } = useContext(DoctorContext); // Get doctor details from context
+  const { doctorDetails, setDoctorDetails } = useContext(DoctorContext); // Get and set doctor details from context
+  const { user, setUser } = useContext(UserDataContext); // Get and set user details from context
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
+  // Fetch doctor and user details based on roomId
   useEffect(() => {
-    const fetchDoctorDetails = async () => {
+    const fetchRoomDetails = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.error("No token found");
-          return;
-        }
-    
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/doctors/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`
         );
-    
+
+        const { doctorId, doctorName, userId, userName } = response.data;
+
+        // Update DoctorContext
         setDoctorDetails({
-          doctorId: response.data.id,
-          doctorName: `${response.data.firstname} ${response.data.lastname}`,
+          doctorId,
+          doctorName,
+        });
+
+        // Update UserContext
+        setUser({
+          id: userId,
+          fullname: {
+            firstname: userName.split(" ")[0],
+            lastname: userName.split(" ")[1] || "",
+          },
+          email: "", // Add email if available in the response
         });
       } catch (error) {
-        console.error("Error fetching doctor profile:", error);
+        console.error("Error fetching room details:", error);
       }
     };
 
+    fetchRoomDetails();
+  }, [roomId, setDoctorDetails, setUser]);
+
+  // Fetch messages for the chat room
+  useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.error("No token found");
-          return;
-        }
-
-        // Fetch old messages for the chat room
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/messages/doctor/${roomId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            params: {
-              doctorId: doctorDetails.doctorId, // Pass doctorId if needed
-            },
-          }
+          `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
         );
         setMessages(response.data); // Load old messages
       } catch (error) {
-        console.error(
-          "Error fetching messages:",
-          error.response?.data || error.message
-        );
+        console.error("Error fetching messages:", error);
       }
     };
 
-    fetchDoctorDetails();
     fetchMessages();
 
     // Listen for new messages from the socket
     socket.on("receive_message", (data) => {
-      if (data.room === roomId) {
+      if (data.roomId === roomId) {
         setMessages((prevMessages) => [...prevMessages, data]);
       }
     });
@@ -85,32 +72,39 @@ const ChatPage = () => {
     return () => {
       socket.off("receive_message");
     };
-  }, [roomId, doctorDetails.doctorId, setDoctorDetails]);
+  }, [roomId]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (newMessage.trim() === "") return;
 
     const messageData = {
-      room: roomId,
-      author: doctorDetails.doctorName || "Doctor",
+      roomId,
+      senderId: user.id, // Use the actual user ID from context
+      receiverId: doctorDetails.doctorId, // Doctor's ID from context
       message: newMessage,
       time: new Date().toLocaleTimeString(),
     };
 
-    socket.emit("send_message", messageData);
-    setMessages((prevMessages) => [...prevMessages, messageData]);
-    setNewMessage("");
+    try {
+      // Save the message to the backend
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/messages`, messageData);
+
+      // Emit the message to the socket server
+      socket.emit("send_message", messageData);
+
+      // Update the local state
+      setMessages((prevMessages) => [...prevMessages, messageData]);
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
       <div className="flex items-center bg-blue-500 text-white p-4 shadow-md">
-        <img
-          src="/icons/doctor-icon.png"
-          alt="Doctor"
-          className="w-10 h-10 rounded-full mr-3"
-        />
+        <img src="../icons/doctor-icon.png" alt="Doctor" className="h-10 w-10 rounded-full mr-4" />
         <h1 className="text-lg font-bold">{doctorDetails.doctorName || "Doctor"}</h1>
       </div>
 
@@ -120,12 +114,12 @@ const ChatPage = () => {
           <div
             key={index}
             className={`mb-4 flex ${
-              msg.author === doctorDetails.doctorName ? "justify-end" : "justify-start"
+              msg.senderId === user.id ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs p-3 rounded-lg ${
-                msg.author === doctorDetails.doctorName
+                msg.senderId === user.id
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-black"
               }`}

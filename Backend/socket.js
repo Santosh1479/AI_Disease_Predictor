@@ -3,25 +3,24 @@ module.exports = (server) => {
   const io = socketIo(server, {
     cors: {
       origin: 'http://localhost:5173', // Frontend URL
-      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-      credentials: true, // Allow cookies and credentials
+      methods: ['GET', 'POST'],
     },
   });
 
   io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log('A user connected:', socket.id);
 
-    socket.on('join_room', (room) => {
-      socket.join(room);
-      console.log(`User joined room: ${room}`);
+    socket.on('join_room', (roomId) => {
+      socket.join(roomId);
+      console.log(`User joined room: ${roomId}`);
     });
 
     socket.on('send_message', (data) => {
-      io.to(data.room).emit('receive_message', data);
+      io.to(data.roomId).emit('receive_message', data);
     });
 
     socket.on('disconnect', () => {
-      console.log('Client disconnected');
+      console.log('User disconnected:', socket.id);
     });
   });
 

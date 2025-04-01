@@ -77,15 +77,31 @@ module.exports.getProfile = async (req, res) => {
   }
 };
 
-module.exports.getDoctorById = async (req, res) => {
+module.exports.getDoctorProfileById = async (req, res) => {
   try {
-    const doctor = await doctorService.getDoctorById(req.params.doctorId);
+    const doctorId = req.params.id;
+
+    // Fetch doctor details by ID
+    const doctor = await doctorService.getDoctorById(doctorId);
     if (!doctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+      return res.status(404).json({ message: "Doctor not found" });
     }
-    res.status(200).json(doctor);
+
+    // Extract the required fields
+    const doctorProfile = {
+      id: doctor._id,
+      firstname: doctor.fullname.firstname,
+      lastname: doctor.fullname.lastname,
+      email: doctor.email,
+      mobileNumber: doctor.mobileNumber,
+      hospital: doctor.hospital,
+      specialisation: doctor.specialisation,
+    };
+
+    res.status(200).json(doctorProfile); // Return the doctor's profile
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching doctor profile by ID:", error);
+    res.status(500).json({ message: "Failed to fetch doctor profile" });
   }
 };
 

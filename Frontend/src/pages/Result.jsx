@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-
+import { DoctorContext } from "../context/DoctorContext";
+import { useContext } from "react";
 const diseaseToSector = {
   "fungal infection": "Dermatology",
   allergy: "Dermatology",
@@ -35,6 +36,7 @@ const Result = () => {
   const [message, setMessage] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const { doctorDetails, setDoctorDetails } = useContext(DoctorContext);
 
   useEffect(() => {
     const fetchHospitalsAndDoctors = async () => {
@@ -155,6 +157,10 @@ const Result = () => {
               },
             }
           );
+
+          setDoctorDetails({
+            doctorId: selectedDoctor,
+            doctorName:doctorName,})
 
           const { roomId } = response.data;
 

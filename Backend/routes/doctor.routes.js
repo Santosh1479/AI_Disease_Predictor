@@ -28,9 +28,8 @@ router.get('/profile', authUserOrDoctor, (req, res) => {
   console.log('Authenticated doctor:', req.user);
   res.status(200).json(req.user);
 });
-// Get doctor by ID
-router.get('/:doctorId', authDoctor, doctorController.getDoctorById);
 
+router.get('/profile/:id', authUserOrDoctor, doctorController.getDoctorProfileById);
 // Doctor logout
 router.post('/logout', authDoctor, doctorController.logoutDoctor);
 

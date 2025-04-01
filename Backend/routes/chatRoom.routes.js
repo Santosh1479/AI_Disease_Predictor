@@ -12,4 +12,6 @@ router.get('/test-auth', authDoctor, (req, res) => {
     res.status(200).json({ user: req.user });
 });
 
+router.get("/room/:roomId", chatController.getRoomDetails);
+
 module.exports = router;

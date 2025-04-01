@@ -5,9 +5,11 @@ const connecttoDB = require('./db/db');
 const userRoutes = require('./routes/user.routes');
 const hospitalRoutes = require('./routes/hospital.routes');
 const doctorRoutes = require('./routes/doctor.routes');
-const messageRoutes = require('./routes/message.routes');
 const resultsRoutes = require('./routes/results.routes');
 const chatRoutes = require('./routes/chatRoom.routes'); // Add chat routes
+const messageRoutes = require('./routes/message.routes');
+
+// Add message routes
 
 // Connect to MongoDB
 connecttoDB();
@@ -37,5 +39,6 @@ app.use('/doctors', doctorRoutes);
 app.use('/messages', messageRoutes);
 app.use('/results', resultsRoutes);
 app.use('/chat', chatRoutes); // Use chat routes
+app.use('/messages', messageRoutes);
 
 module.exports = app;

@@ -40,8 +40,11 @@ const translations = {
 };
 
 const Home = () => {
-  const [name, setName] = useState(UserContext.user);
-  const [symptoms, setSymptoms] = useState("infection,itching, skin_rash, nodal_skin_eruptions");
+  const [user, setUser] = useState(UserContext.user);
+  const [name, setName] = useState("");
+  const [symptoms, setSymptoms] = useState(
+    "infection,itching, skin_rash, nodal_skin_eruptions"
+  );
   const [image, setImage] = useState(null);
   const [description, setDescription] = useState("HI");
   const [loading, setLoading] = useState(false);
@@ -65,6 +68,14 @@ const Home = () => {
                 },
               }
             );
+            setUser({
+              id: response.data._id,
+              email: response.data.email,
+              fullname: {
+                firstname: response.data.fullname.firstname,
+                lastname: response.data.fullname.lastname,
+              },
+            });
             setName(
               `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
             );
@@ -97,9 +108,9 @@ const Home = () => {
           },
         }
       );
-      console.log(name)
+      console.log(`${user.fullname.firstname} ${user.fullname.lastname}`);
       navigate("/results", {
-        state: { disease: response.data.disease, username: name }, // Pass username
+        state: { disease: response.data.disease, username:name }, // Pass username
       });
     } catch (error) {
       console.error("Failed to submit diagnosis", error);

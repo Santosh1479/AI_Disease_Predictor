@@ -29,3 +29,24 @@ module.exports.getChatRoomsForDoctor = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getRoomDetails = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+
+    const room = await ChatRoom.findOne({ roomId });
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    res.status(200).json({
+      doctorId: room.doctorId,
+      doctorName: room.doctorName,
+      userId: room.userId,
+      userName: room.userName,
+    });
+  } catch (error) {
+    console.error("Error fetching room details:", error);
+    res.status(500).json({ error: "Failed to fetch room details" });
+  }
+};
