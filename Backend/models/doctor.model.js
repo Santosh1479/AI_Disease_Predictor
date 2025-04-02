@@ -4,40 +4,13 @@ const jwt = require('jsonwebtoken');
 
 const doctorSchema = new mongoose.Schema({
   fullname: {
-    firstname: {
-      type: String,
-      required: true,
-    },
-    lastname: {
-      type: String,
-      required: true,
-    },
+    firstname: { type: String, required: true },
+    lastname: { type: String, required: true },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  mobileNumber: {
-    type: String,
-    required: true,
-  },
-  password: {
-    type: String,
-    required: true,
-    select: false, // Exclude password from query results by default
-  },
-  hospital: {
-    type: Number,
-    ref: 'Hospital',
-    required: true,
-  },
-  specialisation: {
-    type: String,
-    required: true,
-  },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  specialisation: { type: String, required: true },
 });
-
 // Pre-save middleware to hash the password
 doctorSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next(); // Only hash if the password is modified

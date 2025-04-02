@@ -1,51 +1,23 @@
 import React, { useState, useEffect, useContext } from "react";
 import { io } from "socket.io-client";
-import axios from "axios";
 import { useParams } from "react-router-dom";
-import { DoctorContext } from "../context/DoctorContext";
-import { UserDataContext } from "../context/UserContext"; // Import UserDataContext
+import { MessageContext } from "../context/MessageContext";
+import { UserDataContext } from "../context/UserContext";
+import axios from "axios";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL);
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
-  const { doctorDetails, setDoctorDetails } = useContext(DoctorContext); // Get and set doctor details from context
-  const { user, setUser } = useContext(UserDataContext); // Get and set user details from context
+  const { senderId, receiverId, fetchRoomDetails } = useContext(MessageContext); // Use MessageContext
+  const { user } = useContext(UserDataContext); // Get the current user's details from context
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // Fetch doctor and user details based on roomId
+  // Fetch room details on component mount
   useEffect(() => {
-    const fetchRoomDetails = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`
-        );
-
-        const { doctorId, doctorName, userId, userName } = response.data;
-
-        // Update DoctorContext
-        setDoctorDetails({
-          doctorId,
-          doctorName,
-        });
-
-        // Update UserContext
-        setUser({
-          id: userId,
-          fullname: {
-            firstname: userName.split(" ")[0],
-            lastname: userName.split(" ")[1] || "",
-          },
-          email: "", // Add email if available in the response
-        });
-      } catch (error) {
-        console.error("Error fetching room details:", error);
-      }
-    };
-
-    fetchRoomDetails();
-  }, [roomId, setDoctorDetails, setUser]);
+    fetchRoomDetails(roomId);
+  }, [roomId, fetchRoomDetails]);
 
   // Fetch messages for the chat room
   useEffect(() => {
@@ -79,20 +51,17 @@ const ChatPage = () => {
 
     const messageData = {
       roomId,
-      senderId: user.id, // Use the actual user ID from context
-      receiverId: doctorDetails.doctorId, // Doctor's ID from context
+      senderId: user.id, // Use the current user's ID
+      receiverId, // Use the receiverId from MessageContext
       message: newMessage,
       time: new Date().toLocaleTimeString(),
     };
 
+    console.log("Message Data:", messageData); // Debug the message data
+
     try {
-      // Save the message to the backend
       await axios.post(`${import.meta.env.VITE_BASE_URL}/messages`, messageData);
-
-      // Emit the message to the socket server
       socket.emit("send_message", messageData);
-
-      // Update the local state
       setMessages((prevMessages) => [...prevMessages, messageData]);
       setNewMessage("");
     } catch (error) {
@@ -104,8 +73,7 @@ const ChatPage = () => {
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
       <div className="flex items-center bg-blue-500 text-white p-4 shadow-md">
-        <img src="../icons/doctor-icon.png" alt="Doctor" className="h-10 w-10 rounded-full mr-4" />
-        <h1 className="text-lg font-bold">{doctorDetails.doctorName || "Doctor"}</h1>
+        <h1 className="text-lg font-bold">Chat Room</h1>
       </div>
 
       {/* Messages */}

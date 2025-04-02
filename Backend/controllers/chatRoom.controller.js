@@ -15,6 +15,7 @@ module.exports.createChatRoom = async (req, res) => {
   }
 };
 
+
 module.exports.getChatRoomsForDoctor = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
@@ -30,20 +31,19 @@ module.exports.getChatRoomsForDoctor = async (req, res) => {
   }
 };
 
-exports.getRoomDetails = async (req, res) => {
+module.exports.getRoomDetails = async (req, res) => {
   try {
     const { roomId } = req.params;
 
-    const room = await ChatRoom.findOne({ roomId });
+    // Query the database for the roomId
+    const room = await ChatRoom.findOne({ _id: roomId });
     if (!room) {
       return res.status(404).json({ error: "Room not found" });
     }
 
     res.status(200).json({
-      doctorId: room.doctorId,
-      doctorName: room.doctorName,
-      userId: room.userId,
-      userName: room.userName,
+      senderId: room.userId,
+      receiverId: room.doctorId,
     });
   } catch (error) {
     console.error("Error fetching room details:", error);

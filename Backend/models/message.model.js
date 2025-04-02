@@ -8,12 +8,12 @@ const messageSchema = new mongoose.Schema(
     },
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the User or Doctor model
+      ref: "user", // Correct reference to the User model
       required: true,
     },
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor", // Reference to the Doctor or User model
+      ref: "Doctor", // Reference to the Doctor model
       required: true,
     },
     message: {
