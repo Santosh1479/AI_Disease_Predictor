@@ -2,22 +2,37 @@ import React, { useState, useEffect, useContext } from "react";
 import { io } from "socket.io-client";
 import { useParams } from "react-router-dom";
 import { MessageContext } from "../context/MessageContext";
-import { UserDataContext } from "../context/UserContext";
 import axios from "axios";
 
 const socket = io(import.meta.env.VITE_SOCKET_URL);
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
-  const { senderId, receiverId, fetchRoomDetails } = useContext(MessageContext); // Use MessageContext
-  const { user } = useContext(UserDataContext); // Get the current user's details from context
+  const { senderId, setSenderId, receiverId, setReceiverId } = useContext(MessageContext);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
+  // Get the current user's ID from localStorage
+  const currentUserId = localStorage.getItem("userId");
+
   // Fetch room details on component mount
+  const fetchRoomDetails = async (roomId) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`
+      );
+      const { senderId, receiverId } = response.data;
+
+      setSenderId(senderId);
+      setReceiverId(receiverId);
+    } catch (error) {
+      console.error("Error fetching room details:", error);
+    }
+  };
+
   useEffect(() => {
     fetchRoomDetails(roomId);
-  }, [roomId, fetchRoomDetails]);
+  }, [roomId]);
 
   // Fetch messages for the chat room
   useEffect(() => {
@@ -46,23 +61,28 @@ const ChatPage = () => {
     };
   }, [roomId]);
 
+  // Send a new message
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
 
     const messageData = {
       roomId,
-      senderId: user.id, // Use the current user's ID
-      receiverId, // Use the receiverId from MessageContext
+      senderId: currentUserId, // Use the current user's ID from localStorage
+      receiverId: receiverId, // Use the receiverId from context
       message: newMessage,
       time: new Date().toLocaleTimeString(),
     };
 
-    console.log("Message Data:", messageData); // Debug the message data
-
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/messages`, messageData);
+      // Emit the message to the socket server
       socket.emit("send_message", messageData);
+
+      // Update the local state immediately for better UX
       setMessages((prevMessages) => [...prevMessages, messageData]);
+
+      // Save the message to the backend
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/messages`, messageData);
+
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -82,12 +102,12 @@ const ChatPage = () => {
           <div
             key={index}
             className={`mb-4 flex ${
-              msg.senderId === user.id ? "justify-end" : "justify-start"
+              msg.senderId._id === currentUserId ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs p-3 rounded-lg ${
-                msg.senderId === user.id
+                msg.senderId === currentUserId
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-black"
               }`}

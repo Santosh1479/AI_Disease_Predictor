@@ -26,16 +26,17 @@ const UserSignup = () => {
         const data = response.data;
         setUser(data.user);
         localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user._id); // Store user ID in localStorage
         navigate("/home");
       }
-        } catch (error) {
+    } catch (error) {
       if (error.response && error.response.data.message) {
         setError(error.response.data.message);
       } else {
         console.error("Error during registration:", error);
       }
     }
-
+  
     setEmail("");
     setFirstname("");
     setLastname("");

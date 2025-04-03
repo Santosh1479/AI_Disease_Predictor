@@ -18,7 +18,6 @@ const UserLogin = () => {
     };
 
     try {
-      console.log(`${import.meta.env.VITE_BASE_URL}/users/login`);
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/users/login`,
         userData
@@ -28,6 +27,7 @@ const UserLogin = () => {
         const data = response.data;
         setUser(data.user);
         localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user._id); // Store user ID in localStorage
         navigate("/home");
       }
     } catch (error) {
@@ -41,11 +41,7 @@ const UserLogin = () => {
   return (
     <div className="p-7 h-screen flex flex-col justify-between">
       <div>
-        <img
-          className=" w-20 mb-10"
-          src="icons/logo.png"
-          alt="IMG"
-        />
+        <img className=" w-20 mb-10" src="icons/logo.png" alt="IMG" />
 
         <form
           onSubmit={(e) => {
@@ -88,8 +84,8 @@ const UserLogin = () => {
         <div className="mt-16 mb-5 w-400 h-10 text-center flex items-center justify-center text-white test-2xl font-bold rounded-xl bg-blue-500">
           <Link to={"/doctor-login"} className="text-white">
             Doctor Login
-          </Link></div>
-        
+          </Link>
+        </div>
       </div>
     </div>
   );

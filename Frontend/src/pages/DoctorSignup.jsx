@@ -16,7 +16,7 @@ const DoctorSignup = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-
+  
     const doctorData = {
       firstname,
       lastname,
@@ -26,7 +26,7 @@ const DoctorSignup = () => {
       hospital,
       specialisation,
     };
-
+  
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/doctors/create`,
@@ -36,13 +36,14 @@ const DoctorSignup = () => {
         const data = response.data;
         setUser(data.doctor);
         localStorage.setItem("token", data.token);
+        localStorage.setItem("doctorId", data.doctor._id); // Store doctor ID in localStorage
         navigate("/doctor-home");
       }
     } catch (error) {
       console.error("Error during registration:", error);
     }
   };
-
+  
   return (
     <div className="p-7 h-screen flex flex-col justify-between">
       <div>
