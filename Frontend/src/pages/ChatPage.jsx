@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
-import { io } from "socket.io-client";
 import { useParams } from "react-router-dom";
 import { MessageContext } from "../context/MessageContext";
+import { SocketContext } from "../context/SocketContext"; // Import SocketContext
 import axios from "axios";
-
-const socket = io(import.meta.env.VITE_SOCKET_URL);
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
   const { senderId, setSenderId, receiverId, setReceiverId } = useContext(MessageContext);
+  const { socket } = useContext(SocketContext); // Use the socket from SocketContext
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
@@ -35,18 +34,18 @@ const ChatPage = () => {
   }, [roomId]);
 
   // Fetch messages for the chat room
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
-        );
-        setMessages(response.data); // Load old messages
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
-    };
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
+      );
+      setMessages(response.data); // Load messages from the database
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchMessages();
 
     // Listen for new messages from the socket
@@ -59,7 +58,7 @@ const ChatPage = () => {
     return () => {
       socket.off("receive_message");
     };
-  }, [roomId]);
+  }, [roomId, socket]);
 
   // Send a new message
   const sendMessage = async () => {
@@ -77,12 +76,13 @@ const ChatPage = () => {
       // Emit the message to the socket server
       socket.emit("send_message", messageData);
 
-      // Update the local state immediately for better UX
-      setMessages((prevMessages) => [...prevMessages, messageData]);
-
       // Save the message to the backend
       await axios.post(`${import.meta.env.VITE_BASE_URL}/messages`, messageData);
 
+      // Fetch the latest messages from the database
+      fetchMessages();
+
+      // Clear the input field
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -107,13 +107,13 @@ const ChatPage = () => {
           >
             <div
               className={`max-w-xs p-3 rounded-lg ${
-                msg.senderId === currentUserId
+                msg.senderId._id === currentUserId
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-black"
               }`}
             >
-              <p>{msg.message}</p>
-              <small className="block text-xs mt-1">{msg.time}</small>
+              <p className="mb-1">{msg.message}</p>
+              <small className="block text-xs text-gray-500">{msg.time}</small>
             </div>
           </div>
         ))}
