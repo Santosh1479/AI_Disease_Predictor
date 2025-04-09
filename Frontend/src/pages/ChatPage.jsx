@@ -113,7 +113,9 @@ const ChatPage = () => {
               }`}
             >
               <p className="mb-1">{msg.message}</p>
-              <small className="block text-xs text-gray-500">{msg.time}</small>
+              <small className="block text-xs text-white">
+                {new Date(msg.timestamp).toLocaleString()} {/* Format the timestamp */}
+              </small>
             </div>
           </div>
         ))}

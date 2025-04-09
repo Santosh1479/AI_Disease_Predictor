@@ -22,10 +22,10 @@ const messageSchema = new mongoose.Schema(
     },
     timestamp: {
       type: Date,
-      default: Date.now,
+      default: Date.now, // Automatically saves the current date and time
     },
   },
-  { timestamps: true }
+  { timestamps: true } // Includes createdAt and updatedAt fields
 );
 
 const Message = mongoose.model('Message', messageSchema);

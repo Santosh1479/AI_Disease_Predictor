@@ -46,7 +46,15 @@ module.exports.getUserProfile = async (req, res) => {
   }
 };
 
-module.exports.logoutUser = (req, res) => {
-  res.clearCookie('token');
-  res.status(200).json({ message: 'Logged out successfully' });
+module.exports.logoutUser = async (req, res) => {
+  try {
+    // Clear the token from cookies if applicable
+    res.clearCookie("token");
+
+    // Respond with a success message
+    res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    console.error("Error during logout:", error);
+    res.status(500).json({ message: "Failed to log out" });
+  }
 };

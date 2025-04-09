@@ -33,7 +33,8 @@ exports.getMessagesByRoomId = async (req, res) => {
 
     const messages = await Message.find({ roomId })
       .populate('senderId', 'fullname email') // Populate sender details
-      .populate('receiverId', 'fullname email'); // Populate receiver details
+      .populate('receiverId', 'fullname email') // Populate receiver details
+      .select('message senderId receiverId timestamp'); // Include the timestamp field
 
     res.status(200).json(messages);
   } catch (error) {

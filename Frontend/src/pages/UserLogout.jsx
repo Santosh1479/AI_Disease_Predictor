@@ -1,26 +1,34 @@
-import React from "react";
-import axios from "axios";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const UserLogout = () => {
-  const token = localStorage.getItem("token");
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
-  axios
-    .get(`${import.meta.env.VITE_BASE_URL}/user/logout`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then((response) => {
-      if (response.status === 200) {
+  useEffect(() => {
+    const logout = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        // Make the logout request to the correct endpoint
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/users/logout`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        // Clear localStorage and navigate to login
         localStorage.removeItem("token");
-        localStorage.removeItem("userId"); // Remove user ID from localStorage
-        Navigate("/login");
+        localStorage.removeItem("userId");
+        navigate("/login");
+      } catch (error) {
+        console.error("Error during logout:", error);
       }
-    });
+    };
 
-  return <div>UserLogout</div>;
+    logout();
+  }, [navigate]);
+
+  return null; // No UI needed for logout
 };
 
 export default UserLogout;

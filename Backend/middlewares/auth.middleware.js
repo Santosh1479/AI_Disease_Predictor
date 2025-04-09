@@ -2,21 +2,38 @@ const jwt = require('jsonwebtoken');
 const userModel = require('../models/user.models');
 const doctorModel = require('../models/doctor.model');
 
-module.exports.authUser = async (req, res, next) => {
-  const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
-  }
+const jwt = require('jsonwebtoken');
+const userModel = require('../models/user.models');
+const doctorModel = require('../models/doctor.model');
 
+module.exports.authUser = async (req, res, next) => {
   try {
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Access denied. No token provided.' });
+    }
+    console.log('Authorization Header:', req.headers.authorization);
+
+    const token = authHeader.split(' ')[1]; // Extract the token after "Bearer"
+    if (!token) {
+      return res.status(401).json({ message: 'Access denied. No token provided.' });
+    }
+
+    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find the user in the database
     const user = await userModel.findById(decoded._id);
     if (!user) {
       return res.status(401).json({ message: 'Invalid token.' });
     }
+
+    // Attach the user to the request object
     req.user = user;
     next();
   } catch (error) {
+    console.error('Error in authUser middleware:', error);
     res.status(401).json({ message: 'Invalid token.' });
   }
 };
