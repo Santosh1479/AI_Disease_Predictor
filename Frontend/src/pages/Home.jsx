@@ -110,7 +110,7 @@ const Home = () => {
       );
       console.log(`${user.fullname.firstname} ${user.fullname.lastname}`);
       navigate("/results", {
-        state: { disease: response.data.disease, username:name }, // Pass username
+        state: { disease: response.data.disease, username: name }, // Pass username
       });
     } catch (error) {
       console.error("Failed to submit diagnosis", error);
@@ -155,7 +155,6 @@ const Home = () => {
         console.error("No token found in localStorage");
         return;
       }
-
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/users/logout`,
         {},
@@ -166,8 +165,12 @@ const Home = () => {
         }
       );
 
+      // Remove token and userId from localStorage
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      localStorage.removeItem("userId");
+
+      // Redirect to login page
+      navigate("/login");
     } catch (error) {
       console.error("Error logging out:", error);
     }

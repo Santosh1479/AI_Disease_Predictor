@@ -9,7 +9,6 @@ import DoctorSignup from "./pages/DoctorSignup";
 import Home from "./pages/Home";
 import Result from "./pages/Result";
 import UserProtectWrapper from "./pages/UserProtectWrapper";
-import UserLogout from "./pages/UserLogout";
 import DoctorHome from "./pages/DoctorHome";
 import { DoctorProvider } from "./context/DoctorContext"; // Import DoctorProvider
 import ChatPage from "./pages/ChatPage"; // Import Chat component
@@ -37,14 +36,6 @@ const App = () => {
                     element={
                       <UserProtectWrapper>
                         <Home />
-                      </UserProtectWrapper>
-                    }
-                  />
-                  <Route
-                    path="/users/logout"
-                    element={
-                      <UserProtectWrapper>
-                        <UserLogout />
                       </UserProtectWrapper>
                     }
                   />

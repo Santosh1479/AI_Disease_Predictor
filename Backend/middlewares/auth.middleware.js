@@ -2,10 +2,6 @@ const jwt = require('jsonwebtoken');
 const userModel = require('../models/user.models');
 const doctorModel = require('../models/doctor.model');
 
-const jwt = require('jsonwebtoken');
-const userModel = require('../models/user.models');
-const doctorModel = require('../models/doctor.model');
-
 module.exports.authUser = async (req, res, next) => {
   try {
     // Extract token from Authorization header

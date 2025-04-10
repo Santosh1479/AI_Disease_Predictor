@@ -3,8 +3,7 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const socket = io(import.meta.env.SOCKET, {
-});
+const socket = io(import.meta.env.SOCKET, {});
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
@@ -28,7 +27,7 @@ const DoctorHome = () => {
           }
         );
         console.log("Doctor profile:", response.data);
-        fetchChatRooms(); // Log the profile for debugging
+        fetchChatRooms(); // Fetch chat rooms after fetching profile
       } catch (error) {
         console.error("Error fetching doctor profile:", {
           message: error.message,
@@ -89,8 +88,49 @@ const DoctorHome = () => {
     navigate(`/chat/${roomId}`); // Navigate to the chat page with the room ID
   };
 
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found in localStorage");
+        return;
+      }
+
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/doctors/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Remove token and doctorId from localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("doctorId");
+
+      // Redirect to login page
+      navigate("/doctor-login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 flex h-screen">
+    <div className="container mx-auto p-4 flex flex-col h-screen">
+      {/* Header */}
+      <div className="flex justify-between items-center w-full h-12 bg-blue-500 mb-4">
+        <h2 className="text-xl font-bold text-white ml-4">Doctor Dashboard</h2>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 w-20 h-8 rounded-xl text-white text-sm font-bold mr-5"
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Chat Rooms */}
       <div className="w-full border-r border-gray-300 overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">Texts</h2>
         {chatRooms.map((room, index) => (
