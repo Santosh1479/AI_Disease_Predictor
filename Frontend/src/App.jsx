@@ -4,7 +4,6 @@ import Start from "./pages/Start";
 import UserLogin from "./pages/UserLogin";
 import UserSignup from "./pages/UserSignup";
 import DoctorLogin from "./pages/DoctorLogin";
-import DoctorLogout from "./pages/DoctorLogout";
 import DoctorSignup from "./pages/DoctorSignup";
 import Home from "./pages/Home";
 import Result from "./pages/Result";
@@ -36,14 +35,6 @@ const App = () => {
                     element={
                       <UserProtectWrapper>
                         <Home />
-                      </UserProtectWrapper>
-                    }
-                  />
-                  <Route
-                    path="/Doctors/logout"
-                    element={
-                      <UserProtectWrapper>
-                        <DoctorLogout />
                       </UserProtectWrapper>
                     }
                   />
