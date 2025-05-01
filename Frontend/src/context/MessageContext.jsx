@@ -1,14 +1,23 @@
-import React, { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import React, { createContext, useState } from "react";
 
 export const MessageContext = createContext();
 
 const MessageProvider = ({ children }) => {
+  const [roomId, setRoomId] = useState(null);
   const [senderId, setSenderId] = useState(null);
   const [receiverId, setReceiverId] = useState(null);
 
   return (
-    <MessageContext.Provider value={{ senderId, receiverId, setSenderId, setReceiverId }}>
+    <MessageContext.Provider
+      value={{
+        roomId,
+        setRoomId,
+        senderId,
+        setSenderId,
+        receiverId,
+        setReceiverId,
+      }}
+    >
       {children}
     </MessageContext.Provider>
   );

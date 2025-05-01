@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { MessageContext } from "../context/MessageContext";
 
 const socket = io(import.meta.env.SOCKET, {});
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
+  const { setSenderId, setReceiverId, setRoomId } = useContext(MessageContext);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -29,11 +31,7 @@ const DoctorHome = () => {
         console.log("Doctor profile:", response.data);
         fetchChatRooms(); // Fetch chat rooms after fetching profile
       } catch (error) {
-        console.error("Error fetching doctor profile:", {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-        });
+        console.error("Error fetching doctor profile:", error);
       }
     };
 
@@ -55,10 +53,7 @@ const DoctorHome = () => {
         );
         setChatRooms(response.data); // Update state with chat rooms
       } catch (error) {
-        console.error(
-          "Error fetching chat rooms:",
-          error.response?.data || error.message
-        );
+        console.error("Error fetching chat rooms:", error);
       }
     };
 
@@ -84,36 +79,35 @@ const DoctorHome = () => {
     };
   }, [navigate]);
 
-  const handleChatRoomClick = (roomId) => {
-    navigate(`/chat/${roomId}`); // Navigate to the chat page with the room ID
-  };
-
-  const handleLogout = async () => {
+  const handleChatRoomClick = async (roomId) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found in localStorage");
+        console.error("No token found");
         return;
       }
 
-      await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/doctors/logout`,
-        {},
+      // Fetch chat room details from the backend
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Send token
           },
         }
       );
 
-      // Remove token and doctorId from localStorage
-      localStorage.removeItem("token");
-      localStorage.removeItem("doctorId");
+      const { senderId, receiverId } = response.data;
 
-      // Redirect to login page
-      navigate("/doctor-login");
+      // Update MessageContext with chat room details
+      setSenderId(senderId);
+      setReceiverId(receiverId);
+      setRoomId(roomId);
+
+      // Navigate to the chat page
+      navigate(`/chat/${roomId}`);
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Error fetching chat room details:", error);
     }
   };
 
@@ -122,12 +116,6 @@ const DoctorHome = () => {
       {/* Header */}
       <div className="flex justify-between items-center w-full h-12 bg-blue-500 mb-4">
         <h2 className="text-xl font-bold text-white ml-4">Doctor Dashboard</h2>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 w-20 h-8 rounded-xl text-white text-sm font-bold mr-5"
-        >
-          Logout
-        </button>
       </div>
 
       {/* Chat Rooms */}

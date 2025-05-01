@@ -6,48 +6,25 @@ import axios from "axios";
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
-  const { senderId, setSenderId, receiverId, setReceiverId } = useContext(MessageContext);
+  const { senderId, receiverId } = useContext(MessageContext); // Use MessageContext
   const { socket } = useContext(SocketContext); // Use the socket from SocketContext
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // Get the current user's ID from localStorage
-  const currentUserId = localStorage.getItem("userId");
-
-  // Fetch room details on component mount
-  const fetchRoomDetails = async (roomId) => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`
-      );
-      const { senderId, receiverId } = response.data;
-
-      setSenderId(senderId);
-      setReceiverId(receiverId);
-    } catch (error) {
-      console.error("Error fetching room details:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchRoomDetails(roomId);
-  }, [roomId]);
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
+        );
+        setMessages(response.data); // Load messages from the database
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
 
-  // Fetch messages for the chat room
-  const fetchMessages = async () => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
-      );
-      setMessages(response.data); // Load messages from the database
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
-  };
-
-  useEffect(() => {
     fetchMessages();
-
+    
     // Listen for new messages from the socket
     socket.on("receive_message", (data) => {
       if (data.roomId === roomId) {
@@ -60,32 +37,33 @@ const ChatPage = () => {
     };
   }, [roomId, socket]);
 
-  // Send a new message
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
-
+  
     const messageData = {
       roomId,
-      senderId: currentUserId, // Use the current user's ID from localStorage
-      receiverId: receiverId, // Use the receiverId from context
+      senderId, // Use senderId from MessageContext
+      receiverId, // Use receiverId from MessageContext
       message: newMessage,
-      time: new Date().toLocaleTimeString(),
+      time: new Date().toISOString(), // Use ISO format for timestamps
     };
-
+  
+    console.log("Sending message:", messageData); // Debugging payload
+  
     try {
       // Emit the message to the socket server
       socket.emit("send_message", messageData);
-
+  
       // Save the message to the backend
       await axios.post(`${import.meta.env.VITE_BASE_URL}/messages`, messageData);
-
-      // Fetch the latest messages from the database
-      fetchMessages();
-
+  
+      // Update the local state
+      setMessages((prevMessages) => [...prevMessages, messageData]);
+  
       // Clear the input field
       setNewMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error sending message:", error.response?.data || error.message);
     }
   };
 
@@ -102,20 +80,18 @@ const ChatPage = () => {
           <div
             key={index}
             className={`mb-4 flex ${
-              msg.senderId._id === currentUserId ? "justify-end" : "justify-start"
+              msg.senderId === senderId ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs p-3 rounded-lg ${
-                msg.senderId._id === currentUserId
+                msg.senderId === senderId
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-black"
               }`}
             >
-              <p className="mb-1">{msg.message}</p>
-              <small className="block text-xs text-white">
-                {new Date(msg.timestamp).toLocaleString()} {/* Format the timestamp */}
-              </small>
+              <p>{msg.message}</p>
+              <small className="block text-xs mt-1">{msg.time}</small>
             </div>
           </div>
         ))}
