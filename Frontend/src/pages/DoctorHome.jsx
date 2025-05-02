@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { MessageContext } from "../context/MessageContext";
 
 const socket = io(import.meta.env.SOCKET, {});
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
-  const { setSenderId, setReceiverId, setRoomId } = useContext(MessageContext);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -79,36 +77,9 @@ const DoctorHome = () => {
     };
   }, [navigate]);
 
-  const handleChatRoomClick = async (roomId) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        return;
-      }
-
-      // Fetch chat room details from the backend
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Send token
-          },
-        }
-      );
-
-      const { senderId, receiverId } = response.data;
-
-      // Update MessageContext with chat room details
-      setSenderId(senderId);
-      setReceiverId(receiverId);
-      setRoomId(roomId);
-
-      // Navigate to the chat page
-      navigate(`/chat/${roomId}`);
-    } catch (error) {
-      console.error("Error fetching chat room details:", error);
-    }
+  const handleChatRoomClick = (roomId) => {
+    // Navigate to the chat page with the roomId
+    navigate(`/chat/${roomId}`);
   };
 
   return (
