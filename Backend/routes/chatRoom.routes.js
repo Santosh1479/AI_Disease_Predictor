@@ -11,6 +11,7 @@ router.get('/doctor-chat-rooms', authDoctor, chatController.getChatRoomsForDocto
 router.get('/test-auth', authDoctor, (req, res) => {
     res.status(200).json({ user: req.user });
 });
+router.patch('/clear-notifications/:roomId', chatRoomController.clearNotifications);
 
 router.get('/room/:roomId', chatController.getRoomDetails);
 

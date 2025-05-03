@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const chatRoomSchema = new mongoose.Schema({
   userId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   userName: {
@@ -10,12 +10,24 @@ const chatRoomSchema = new mongoose.Schema({
     required: true,
   },
   doctorId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   doctorName: {
     type: String,
     required: true,
+  },
+  unreadMessages: {
+    type: Number,
+    default: 0, // Track the number of unread messages
+  },
+  lastMessage: {
+    type: String, // Store the last message in the chat
+    default: "",
+  },
+  lastMessageTimestamp: {
+    type: Date, // Timestamp of the last message
+    default: null,
   },
 });
 

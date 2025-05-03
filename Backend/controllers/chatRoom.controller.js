@@ -15,6 +15,34 @@ module.exports.createChatRoom = async (req, res) => {
   }
 };
 
+exports.getChatRooms = async (req, res) => {
+  try {
+    const chatRooms = await ChatRoom.find()
+      .populate('userId', 'isOnline') // Populate user online status
+      .populate('doctorId', 'isOnline'); // Populate doctor online status
+
+    res.status(200).json(chatRooms);
+  } catch (error) {
+    console.error('Error fetching chat rooms:', error);
+    res.status(500).json({ error: 'Failed to fetch chat rooms' });
+  }
+};
+
+exports.clearNotifications = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+
+    await ChatRoom.findOneAndUpdate(
+      { _id: roomId },
+      { $set: { unreadMessages: 0 } }
+    );
+
+    res.status(200).json({ message: 'Notifications cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing notifications:', error);
+    res.status(500).json({ error: 'Failed to clear notifications' });
+  }
+};
 
 module.exports.getChatRoomsForDoctor = async (req, res) => {
   try {

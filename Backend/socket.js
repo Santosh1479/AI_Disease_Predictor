@@ -26,3 +26,17 @@ module.exports = (server) => {
 
   return io;
 };
+
+const io = require('socket.io')(server);
+
+io.on('connection', (socket) => {
+  const { userId } = socket.handshake.query;
+
+  // Mark user as online
+  Doctor.findByIdAndUpdate(userId, { isOnline: true }, { new: true }).exec();
+
+  socket.on('disconnect', async () => {
+    // Mark user as offline
+    await Doctor.findByIdAndUpdate(userId, { isOnline: false }, { new: true }).exec();
+  });
+});
