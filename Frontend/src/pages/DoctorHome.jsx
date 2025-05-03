@@ -82,11 +82,27 @@ const DoctorHome = () => {
     navigate(`/chat/${roomId}`);
   };
 
+  const handleLogout = () => {
+    // Clear the token from localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("doctorId");
+
+    // Redirect to the login page
+    navigate("/doctor-login");
+  };
+
   return (
     <div className="container mx-auto p-4 flex flex-col h-screen">
       {/* Header */}
       <div className="flex justify-between items-center w-full h-12 bg-blue-500 mb-4">
         <h2 className="text-xl font-bold text-white ml-4">Doctor Dashboard</h2>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded-lg mr-4"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
       </div>
 
       {/* Chat Rooms */}

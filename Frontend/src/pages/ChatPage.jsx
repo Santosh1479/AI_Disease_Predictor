@@ -53,24 +53,13 @@ const ChatPage = () => {
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
         );
-        console.log("Fetched messages:", response.data);
-  
-        // Loop through the messages and log senderId._id
-        for (let i = 0; i < response.data.length; i++) {
-          const message = response.data[i];
-          if (message.senderId && message.senderId._id) {
-            console.log(`Message ${i + 1} Sender ID:`, message.senderId._id);
-          } else {
-            console.log(`Message ${i + 1} has no valid senderId`);
-          }
-        }
-  
-        setMessages(response.data); // Save messages to state
+        console.log("Fetched messages from backend:", response.data); // Debugging log
+        setMessages(response.data); // Save all messages to state
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
     };
-  
+
     fetchMessages();
 
     // Listen for new messages from the socket
@@ -87,30 +76,30 @@ const ChatPage = () => {
 
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
-
+  
     const messageData = {
       roomId,
       senderId, // Use senderId from state
       receiverId, // Use receiverId from state
       message: newMessage,
-      time: new Date().toISOString(), // Use ISO format for timestamps
+      timestamp: new Date().toISOString(), // Use ISO format for timestamps
     };
-
+  
     console.log("Sending message:", messageData); // Debugging payload
-
+  
     try {
       // Emit the message to the socket server
       socket.emit("send_message", messageData);
-
+  
       // Save the message to the backend
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/messages`,
         messageData
       );
-
+  
       // Update the local state
       setMessages((prevMessages) => [...prevMessages, messageData]);
-
+  
       // Clear the input field
       setNewMessage("");
     } catch (error) {
@@ -134,14 +123,12 @@ const ChatPage = () => {
           <div
             key={index}
             className={`mb-4 flex ${
-              msg.senderId && msg.senderId._id === senderId
-                ? "justify-end pl-2 bg-blue-400"
-                : "justify-start pl-8 bg-red-400"
+              msg.senderId === senderId ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-xs p-3 rounded-lg ${
-                msg.senderId && msg.senderId._id === senderId
+                msg.senderId === senderId
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-black"
               }`}

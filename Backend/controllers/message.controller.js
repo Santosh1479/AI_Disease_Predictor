@@ -31,11 +31,8 @@ exports.getMessagesByRoomId = async (req, res) => {
   try {
     const { roomId } = req.params;
 
-    const messages = await Message.find({ roomId })
-      .populate('senderId', 'fullname email') // Populate sender details
-      .populate('receiverId', 'fullname email') // Populate receiver details
-      .select('message senderId receiverId timestamp'); // Include the timestamp field
-
+    const messages = await Message.find({ roomId }).select('message senderId receiverId timestamp');
+    console.log("Fetched messages from DB:", messages); // Debugging log
     res.status(200).json(messages);
   } catch (error) {
     console.error("Error fetching messages:", error);
