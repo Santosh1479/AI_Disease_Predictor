@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext"; // Import SocketContext
 import axios from "axios";
 import { useContext } from "react";
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
+  const navigate = useNavigate();
   const { socket } = useContext(SocketContext); // Use the socket from SocketContext
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [senderId, setSenderId] = useState(null);
   const [receiverId, setReceiverId] = useState(null);
 
+  // Fetch chat room details
   useEffect(() => {
     const fetchChatRoomDetails = async () => {
       try {
@@ -19,7 +21,6 @@ const ChatPage = () => {
         const userId =
           localStorage.getItem("userId") || localStorage.getItem("doctorId"); // Get the logged-in user's ID
         setSenderId(userId); // Set the senderId as the logged-in user's ID
-        console.log("Logged-in user ID (senderId):", userId);
 
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/chat/room/${roomId}`,
@@ -37,8 +38,6 @@ const ChatPage = () => {
         } else {
           setReceiverId(doctorId);
         }
-
-        // Determine the receiverId based on the logged-in user's role
       } catch (error) {
         console.error("Error fetching chat room details:", error);
       }
@@ -47,13 +46,13 @@ const ChatPage = () => {
     fetchChatRoomDetails();
   }, [roomId]);
 
+  // Fetch messages and listen for new messages
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
         );
-        console.log("Fetched messages from backend:", response.data); // Debugging log
         setMessages(response.data); // Save all messages to state
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -70,13 +69,32 @@ const ChatPage = () => {
     });
 
     return () => {
+      // Clear notifications when exiting the chatroom
+      const clearNotifications = async () => {
+        try {
+          await axios.patch(
+            `${import.meta.env.VITE_BASE_URL}/chat/clear-notifications/${roomId}`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+        } catch (error) {
+          console.error("Error clearing notifications on exit:", error);
+        }
+      };
+
+      clearNotifications();
       socket.off("receive_message");
     };
   }, [roomId, socket]);
 
+  // Send a new message
   const sendMessage = async () => {
     if (newMessage.trim() === "") return;
-  
+
     const messageData = {
       roomId,
       senderId, // Use senderId from state
@@ -84,22 +102,20 @@ const ChatPage = () => {
       message: newMessage,
       timestamp: new Date().toISOString(), // Use ISO format for timestamps
     };
-  
-    console.log("Sending message:", messageData); // Debugging payload
-  
+
     try {
       // Emit the message to the socket server
       socket.emit("send_message", messageData);
-  
+
       // Save the message to the backend
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/messages`,
         messageData
       );
-  
+
       // Update the local state
       setMessages((prevMessages) => [...prevMessages, messageData]);
-  
+
       // Clear the input field
       setNewMessage("");
     } catch (error) {
@@ -115,6 +131,12 @@ const ChatPage = () => {
       {/* Header */}
       <div className="flex items-center bg-blue-500 text-white p-4 shadow-md">
         <h1 className="text-lg font-bold">Chat Room</h1>
+        <button
+          className="ml-auto bg-red-500 text-white px-4 py-2 rounded-lg"
+          onClick={() => navigate("/doctor-home")}
+        >
+          Back
+        </button>
       </div>
 
       {/* Messages */}
@@ -165,6 +187,8 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+
+
 // import React, { useState, useEffect } from "react";
 // import { useParams } from "react-router-dom";
 // import { SocketContext } from "../context/SocketContext"; // Import SocketContext

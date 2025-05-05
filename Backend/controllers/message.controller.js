@@ -2,9 +2,6 @@ const Message = require('../models/message.model');
 const User = require('../models/user.models'); // Import the User model
 const Doctor = require('../models/doctor.model');
 const mongoose = require('mongoose');
-// Save a new message
-const ChatRoom = require('../models/chatRoom.model');
-
 const ChatRoom = require('../models/chatRoom.model');
 
 exports.saveMessage = async (req, res) => {
@@ -24,14 +21,22 @@ exports.saveMessage = async (req, res) => {
 
     await newMessage.save();
 
-    // Increment unread messages for the receiver
+    // Increment unread messages for the receiver only
     await ChatRoom.findOneAndUpdate(
       { _id: roomId },
       {
         $set: { lastMessage: message, lastMessageTimestamp: new Date() },
-        $inc: { unreadMessages: 1 },
+        $inc: { unreadMessages: senderId !== receiverId ? 1 : 0 }, // Increment only if sender is not the receiver
       }
     );
+
+    // Clear notifications for the sender
+    if (senderId === receiverId) {
+      await ChatRoom.findOneAndUpdate(
+        { _id: roomId },
+        { $set: { unreadMessages: 0 } }
+      );
+    }
 
     res.status(201).json({ message: 'Message saved successfully', newMessage });
   } catch (error) {
@@ -39,6 +44,8 @@ exports.saveMessage = async (req, res) => {
     res.status(500).json({ error: 'Failed to save message' });
   }
 };
+
+
 exports.getMessagesByRoomId = async (req, res) => {
   try {
     const { roomId } = req.params;

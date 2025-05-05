@@ -65,7 +65,10 @@ const DoctorHome = () => {
               ...room,
               lastMessage: data.message,
               lastMessageTimestamp: data.timestamp,
-              unreadMessages: room.senderId !== localStorage.getItem('userId') ? room.unreadMessages + 1 : room.unreadMessages,
+              unreadMessages:
+                data.senderId !== localStorage.getItem("userId")
+                  ? room.unreadMessages + 1
+                  : 0, // Reset unreadMessages for the sender
             };
           }
           return room;
@@ -87,25 +90,26 @@ const DoctorHome = () => {
         {},
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-
+  
       // Reset unread messages in the frontend state
       setChatRooms((prevChatRooms) =>
         prevChatRooms.map((room) =>
           room._id === roomId ? { ...room, unreadMessages: 0 } : room
         )
       );
-
+  
       // Navigate to the chat page with the roomId
       navigate(`/chat/${roomId}`);
     } catch (error) {
-      console.error('Error clearing notifications:', error);
+      console.error("Error clearing notifications:", error);
     }
   };
 
+  
   const handleLogout = () => {
     // Clear the token from localStorage
     localStorage.removeItem("token");

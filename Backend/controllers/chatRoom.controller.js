@@ -37,13 +37,12 @@ exports.clearNotifications = async (req, res) => {
       { $set: { unreadMessages: 0 } }
     );
 
-    res.status(200).json({ message: 'Notifications cleared successfully' });
+    res.status(200).json({ message: "Notifications cleared successfully" });
   } catch (error) {
-    console.error('Error clearing notifications:', error);
-    res.status(500).json({ error: 'Failed to clear notifications' });
+    console.error("Error clearing notifications:", error);
+    res.status(500).json({ error: "Failed to clear notifications" });
   }
 };
-
 module.exports.getChatRoomsForDoctor = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
