@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { DoctorContext } from "../context/DoctorContext";
 import { useContext } from "react";
+
 const diseaseToSector = {
   "fungal infection": "Dermatology",
   allergy: "Dermatology",
@@ -31,7 +32,7 @@ const diseaseToSector = {
 const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { disease, username } = location.state; // Retrieve username and disease
+  const { disease, username } = location.state || {}; // Safely retrieve disease and username
   const [hospitals, setHospitals] = useState([]);
   const [message, setMessage] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -39,6 +40,11 @@ const Result = () => {
   const { doctorDetails, setDoctorDetails } = useContext(DoctorContext);
 
   useEffect(() => {
+    if (!disease) {
+      console.error("Disease is undefined");
+      return;
+    }
+
     const fetchHospitalsAndDoctors = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -160,7 +166,8 @@ const Result = () => {
 
           setDoctorDetails({
             doctorId: selectedDoctor,
-            doctorName:doctorName,})
+            doctorName: doctorName,
+          });
 
           const { roomId } = response.data;
 
@@ -180,9 +187,9 @@ const Result = () => {
       <div className="bg-blue-500 text-white p-4 rounded shadow-md">
         <h1 className="text-2xl font-bold mb-4">Diagnosis Result:</h1>
         <h2 className="text-xl font-semibold">Predicted Disease</h2>
-        <p className="text-gray-800 text-xl">{disease}</p>
+        <p className="text-gray-800 text-xl">{disease || "Unknown"}</p>
         <p className="text-gray-800">
-          Sector: {diseaseToSector[disease.toLowerCase().trim()] || "Unknown"}
+          Sector: {diseaseToSector[disease?.toLowerCase()?.trim()] || "Unknown"}
         </p>
       </div>
       <div className="bg-blue-100 rounded-xl mt-4 p-4">
