@@ -43,7 +43,7 @@ const Home = () => {
   const [user, setUser] = useState(UserContext.user);
   const [name, setName] = useState("");
   const [symptoms, setSymptoms] = useState(
-    "infection,itching, skin_rash, nodal_skin_eruptions"
+    "erythema, pain, swelling, redness, fever, abscess bacterial, patient non compliance, hypesthesia, hyperacusis, pruritus, pain chest, scratch marks, chill, sore to touch"
   );
   const [image, setImage] = useState(null);
   const [description, setDescription] = useState("HI");
@@ -108,9 +108,9 @@ const Home = () => {
           },
         }
       );
-      console.log(`${user.fullname.firstname} ${user.fullname.lastname}`);
+      // Use response.data.predicted_disease instead of response.data.disease
       navigate("/results", {
-        state: { disease: response.data.disease, username: name }, // Pass username
+        state: { disease: response.data.predicted_disease, username: name },
       });
     } catch (error) {
       console.error("Failed to submit diagnosis", error);
