@@ -43,7 +43,7 @@ const Home = () => {
   const [user, setUser] = useState(UserContext.user);
   const [name, setName] = useState("");
   const [symptoms, setSymptoms] = useState(
-    "erythema, pain, swelling, redness, fever, abscess bacterial, patient non compliance, hypesthesia, hyperacusis, pruritus, pain chest, scratch marks, chill, sore to touch"
+    "itching, skin_rash, nodal_skin_eruptions, dischromic _patches"
   );
   const [image, setImage] = useState(null);
   const [description, setDescription] = useState("HI");
