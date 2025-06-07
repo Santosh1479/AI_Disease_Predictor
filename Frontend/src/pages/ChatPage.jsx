@@ -73,7 +73,9 @@ const ChatPage = () => {
       const clearNotifications = async () => {
         try {
           await axios.patch(
-            `${import.meta.env.VITE_BASE_URL}/chat/clear-notifications/${roomId}`,
+            `${
+              import.meta.env.VITE_BASE_URL
+            }/chat/clear-notifications/${roomId}`,
             {},
             {
               headers: {
@@ -187,7 +189,6 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
-
 
 // import React, { useState, useEffect } from "react";
 // import { useParams } from "react-router-dom";

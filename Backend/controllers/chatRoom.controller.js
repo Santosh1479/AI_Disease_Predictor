@@ -43,15 +43,25 @@ exports.clearNotifications = async (req, res) => {
     res.status(500).json({ error: "Failed to clear notifications" });
   }
 };
-module.exports.getChatRoomsForDoctor = async (req, res) => {
+exports.getChatRoomsForDoctor = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res.status(400).json({ message: 'Doctor ID is missing' });
     }
-
-    const doctorId = req.user._id; // Extract doctor ID
-    const chatRooms = await ChatRoom.find({ doctorId }); // Fetch chat rooms
-    res.status(200).json(chatRooms);
+    const doctorId = req.user._id;
+    const chatRooms = await ChatRoom.find({ doctorId })
+      .populate('userId', 'fullname isOnline'); // Populate user online status
+    // Map to include isOnline at top level for frontend
+    const roomsWithOnline = chatRooms.map(room => ({
+      ...room.toObject(),
+      isOnline: room.userId.isOnline,
+      userName: room.userName,
+      lastMessage: room.lastMessage,
+      lastMessageTimestamp: room.lastMessageTimestamp,
+      unreadMessages: room.unreadMessages,
+      _id: room._id
+    }));
+    res.status(200).json(roomsWithOnline);
   } catch (error) {
     console.error('Error fetching chat rooms:', error);
     res.status(500).json({ message: error.message });

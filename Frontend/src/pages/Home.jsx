@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import UserContext from "../context/UserContext";
 import "remixicon/fonts/remixicon.css";
 import { LanguageContext } from "../context/LanguageContext";
+import { io } from "socket.io-client";
 
 const translations = {
   en: {
@@ -51,6 +52,7 @@ const Home = () => {
   const navigate = useNavigate();
   const { language, setLanguage } = useContext(LanguageContext);
   const t = translations[language];
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -79,7 +81,9 @@ const Home = () => {
             setName(
               `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
             );
+
           }
+          console.log(user);
         }
       } catch (error) {
         console.error("Failed to fetch user data", error);
@@ -87,6 +91,19 @@ const Home = () => {
     };
 
     fetchUserData();
+  }, []);
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      socketRef.current = io(import.meta.env.VITE_ML_URL, {
+        query: { userId },
+      });
+      // No listeners needed!
+    }
+    // Cleanup on unmount: disconnect socket
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
   }, []);
 
   const handleSubmit = async (e) => {

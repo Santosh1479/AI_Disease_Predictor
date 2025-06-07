@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
+import React, { useState, useEffect,useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-const socket = io(import.meta.env.SOCKET, {});
+import { SocketContext } from "../context/SocketContext";
+import { io } from "socket.io-client";
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
+  const { socket } = useContext(SocketContext);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -81,6 +81,32 @@ const DoctorHome = () => {
       socket.off("receive_message");
     };
   }, [navigate]);
+  useEffect(() => {
+    // Listen for user online/offline events
+    socket.on("userOnline", ({ userId }) => {
+      setChatRooms((prev) =>
+        prev.map((room) =>
+          room.userId === userId || room.userId?._id === userId
+            ? { ...room, isOnline: true }
+            : room
+        )
+      );
+    });
+    socket.on("userOffline", ({ userId }) => {
+      setChatRooms((prev) =>
+        prev.map((room) =>
+          room.userId === userId || room.userId?._id === userId
+            ? { ...room, isOnline: false }
+            : room
+        )
+      );
+    });
+
+    return () => {
+      socket.off("userOnline");
+      socket.off("userOffline");
+    };
+  }, []);
 
   const handleChatRoomClick = async (roomId) => {
     try {
@@ -94,14 +120,14 @@ const DoctorHome = () => {
           },
         }
       );
-  
+
       // Reset unread messages in the frontend state
       setChatRooms((prevChatRooms) =>
         prevChatRooms.map((room) =>
           room._id === roomId ? { ...room, unreadMessages: 0 } : room
         )
       );
-  
+
       // Navigate to the chat page with the roomId
       navigate(`/chat/${roomId}`);
     } catch (error) {
@@ -109,7 +135,6 @@ const DoctorHome = () => {
     }
   };
 
-  
   const handleLogout = () => {
     // Clear the token from localStorage
     localStorage.removeItem("token");
