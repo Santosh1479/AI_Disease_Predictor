@@ -14,5 +14,12 @@ router.get('/test-auth', authDoctor, (req, res) => {
 router.patch('/clear-notifications/:roomId', chatController.clearNotifications);
 
 router.get('/room/:roomId', chatController.getRoomDetails);
+const { authUser } = require('../middlewares/auth.middleware');
+
+// Get all chat rooms for a user
+router.get('/user-chat-rooms', authUser, chatController.getChatRoomsForUser);
+
+// Mark all messages as read in a chat room (user)
+router.patch('/clear-user-notifications/:roomId', authUser, chatController.clearUserNotifications);
 
 module.exports = router;

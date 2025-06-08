@@ -68,6 +68,41 @@ exports.getChatRoomsForDoctor = async (req, res) => {
   }
 };
 
+exports.getChatRoomsForUser = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const chatRooms = await ChatRoom.find({ userId })
+      .populate('doctorId', 'fullname email isOnline') // doctor info
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json(chatRooms);
+  } catch (error) {
+    console.error('Error fetching user chat rooms:', error);
+    res.status(500).json({ error: 'Failed to fetch user chat rooms' });
+  }
+};
+
+exports.clearUserNotifications = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user._id;
+
+    // Only allow if the user is part of the chat room
+    const room = await ChatRoom.findOne({ _id: roomId, userId });
+    if (!room) {
+      return res.status(404).json({ error: "Chat room not found" });
+    }
+
+    room.unreadMessages = 0;
+    await room.save();
+
+    res.status(200).json({ message: "Notifications cleared successfully" });
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    res.status(500).json({ error: "Failed to clear notifications" });
+  }
+};
+
 module.exports.getRoomDetails = async (req, res) => {
   try {
     const { roomId } = req.params;

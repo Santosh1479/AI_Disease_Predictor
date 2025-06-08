@@ -7,46 +7,46 @@ import { useContext } from "react";
 
 const diseaseToSector = {
   "fungal infection": "Dermatology",
-  "allergy": "Immunology",
-  "gerd": "Gastroenterology",
+  allergy: "Immunology",
+  gerd: "Gastroenterology",
   "chronic cholestasis": "Gastroenterology",
   "drug reaction": "Dermatology",
   "peptic ulcer diseae": "Gastroenterology",
-  "aids": "Infectious Disease",
-  "diabetes": "Endocrinology",
-  "gastroenteritis": "Gastroenterology",
+  aids: "Infectious Disease",
+  diabetes: "Endocrinology",
+  gastroenteritis: "Gastroenterology",
   "bronchial asthma": "Pulmonology",
-  "hypertension": "Cardiology",
-  "migraine": "Neurology",
+  hypertension: "Cardiology",
+  migraine: "Neurology",
   "cervical spondylosis": "Orthopedics",
   "paralysis (brain hemorrhage)": "Neurology",
-  "jaundice": "Hepatology",
-  "malaria": "Infectious Disease",
+  jaundice: "Hepatology",
+  malaria: "Infectious Disease",
   "chicken pox": "Infectious Disease",
-  "dengue": "Infectious Disease",
-  "typhoid": "Infectious Disease",
+  dengue: "Infectious Disease",
+  typhoid: "Infectious Disease",
   "hepatitis a": "Hepatology",
   "hepatitis b": "Hepatology",
   "hepatitis c": "Hepatology",
   "hepatitis d": "Hepatology",
   "hepatitis e": "Hepatology",
   "alcoholic hepatitis": "Hepatology",
-  "tuberculosis": "Pulmonology",
+  tuberculosis: "Pulmonology",
   "common cold": "General Medicine",
-  "pneumonia": "Pulmonology",
+  pneumonia: "Pulmonology",
   "dimorphic hemmorhoids(piles)": "General Surgery",
   "heart attack": "Cardiology",
   "varicose veins": "Vascular Surgery",
-  "hypothyroidism": "Endocrinology",
-  "hyperthyroidism": "Endocrinology",
-  "hypoglycemia": "Endocrinology",
-  "osteoarthristis": "Rheumatology",
-  "arthritis": "Rheumatology",
+  hypothyroidism: "Endocrinology",
+  hyperthyroidism: "Endocrinology",
+  hypoglycemia: "Endocrinology",
+  osteoarthristis: "Rheumatology",
+  arthritis: "Rheumatology",
   "(vertigo) paroymsal  positional vertigo": "Neurology",
-  "acne": "Dermatology",
+  acne: "Dermatology",
   "urinary tract infection": "Urology",
-  "psoriasis": "Dermatology",
-  "impetigo": "Dermatology"
+  psoriasis: "Dermatology",
+  impetigo: "Dermatology",
 };
 
 const Result = () => {
@@ -223,36 +223,68 @@ const Result = () => {
                 {hospital.name} ({hospital.distance.toFixed(2)} km)
               </div>
               <div>{hospital.address}</div>
-              <div className="mt-2">
-                <select
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  onChange={(e) => setSelectedDoctor(e.target.value)}
-                >
-                  <option value="">Select a doctor</option>
-                  {hospital.doctors &&
-                    hospital.doctors.map((doctor, index) => (
-                      <option key={index} value={doctor._id}>
+              {hospital.doctors && hospital.doctors.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {hospital.doctors.map((doctor, index) => (
+                    <div
+                      key={doctor._id}
+                      className="flex items-center justify-between bg-white rounded shadow px-3 py-2 mb-2"
+                    >
+                      <span>
                         {doctor.fullname.firstname} {doctor.fullname.lastname} -{" "}
                         {doctor.specialisation}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div className="mt-2">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  placeholder="Type your message here..."
-                />
-                <button
-                  onClick={sendMessage}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-                >
-                  Send
-                </button>
-              </div>
+                      </span>
+                      <button
+                        className="text-blue-600 hover:text-blue-800 ml-2"
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem("token");
+                            if (token) {
+                              const decodedToken = jwtDecode(token);
+                              const userId = decodedToken._id;
+                              const userName = username;
+                              const doctorName = `${doctor.fullname.firstname} ${doctor.fullname.lastname}`;
+                              // Create chat room
+                              const response = await axios.post(
+                                `${import.meta.env.VITE_BASE_URL}/chat/create`,
+                                {
+                                  userId,
+                                  userName,
+                                  doctorId: doctor._id,
+                                  doctorName,
+                                },
+                                {
+                                  headers: {
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                }
+                              );
+                              setDoctorDetails({
+                                doctorId: doctor._id,
+                                doctorName: doctorName,
+                              });
+                              const { roomId } = response.data;
+                              navigate(`/chat/${roomId}`, {
+                                state: {
+                                  roomId,
+                                  userId,
+                                  doctorId: doctor._id,
+                                  doctorName,
+                                },
+                              });
+                            }
+                          } catch (error) {
+                            console.error("Failed to create chat room", error);
+                          }
+                        }}
+                        title="Message Doctor"
+                      >
+                        <i className="ri-message-3-line text-xl"></i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
         </ul>

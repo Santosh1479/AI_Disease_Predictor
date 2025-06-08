@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { SocketContext } from "../context/SocketContext"; // Import SocketContext
+import { UserSocketContext } from "../context/UserSocketContext"; // Import SocketContext
 import axios from "axios";
 import { useContext } from "react";
 
 const ChatPage = () => {
   const { roomId } = useParams(); // Get the room ID from the URL
   const navigate = useNavigate();
-  const { socket } = useContext(SocketContext); // Use the socket from SocketContext
+  const socket = useContext(UserSocketContext); // Use the socket from SocketContext
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [senderId, setSenderId] = useState(null);
@@ -48,50 +48,53 @@ const ChatPage = () => {
 
   // Fetch messages and listen for new messages
   useEffect(() => {
-    const fetchMessages = async () => {
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
+      );
+      setMessages(response.data); // Save all messages to state
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  fetchMessages();
+
+  // Only add listeners if socket exists
+  if (!socket) return;
+
+  // Listen for new messages from the socket
+  socket.on("receive_message", (data) => {
+    if (data.roomId === roomId) {
+      setMessages((prevMessages) => [...prevMessages, data]);
+    }
+  });
+
+  return () => {
+    // Clear notifications when exiting the chatroom
+    const clearNotifications = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/messages/${roomId}`
+        await axios.patch(
+          `${import.meta.env.VITE_BASE_URL}/chat/clear-notifications/${roomId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
-        setMessages(response.data); // Save all messages to state
       } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.error("Error clearing notifications on exit:", error);
       }
     };
 
-    fetchMessages();
-
-    // Listen for new messages from the socket
-    socket.on("receive_message", (data) => {
-      if (data.roomId === roomId) {
-        setMessages((prevMessages) => [...prevMessages, data]);
-      }
-    });
-
-    return () => {
-      // Clear notifications when exiting the chatroom
-      const clearNotifications = async () => {
-        try {
-          await axios.patch(
-            `${
-              import.meta.env.VITE_BASE_URL
-            }/chat/clear-notifications/${roomId}`,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
-        } catch (error) {
-          console.error("Error clearing notifications on exit:", error);
-        }
-      };
-
-      clearNotifications();
+    clearNotifications();
+    if (socket) {
       socket.off("receive_message");
-    };
-  }, [roomId, socket]);
+    }
+  };
+}, [roomId, socket]);
 
   // Send a new message
   const sendMessage = async () => {

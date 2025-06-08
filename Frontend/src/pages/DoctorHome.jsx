@@ -1,34 +1,31 @@
-import React, { useState, useEffect,useContext,useRef } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { SocketContext } from "../context/SocketContext";
+import { UserSocketContext } from "../context/UserSocketContext";
 import { io } from "socket.io-client";
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
-  const { socket } = useContext(SocketContext);
+  const socket = useContext(UserSocketContext);
   const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        navigate("/doctor-login"); // Redirect to login if token is missing
+        navigate("/doctor-login");
         return;
       }
-
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/doctors/profile`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`, // Send token
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         console.log("Doctor profile:", response.data);
-        fetchChatRooms(); // Fetch chat rooms after fetching profile
+        fetchChatRooms();
       } catch (error) {
         console.error("Error fetching doctor profile:", error);
       }
@@ -41,16 +38,13 @@ const DoctorHome = () => {
           console.error("No token found");
           return;
         }
-
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/chat/doctor-chat-rooms`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`, // Send token
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setChatRooms(response.data); // Update state with chat rooms
+        setChatRooms(response.data);
       } catch (error) {
         console.error("Error fetching chat rooms:", error);
       }
@@ -58,67 +52,35 @@ const DoctorHome = () => {
 
     fetchDoctorProfile();
 
-    socket.on("receive_message", (data) => {
-      setChatRooms((prevChatRooms) => {
-        const updatedChatRooms = prevChatRooms.map((room) => {
-          if (room._id === data.roomId) {
-            return {
-              ...room,
-              lastMessage: data.message,
-              lastMessageTimestamp: data.timestamp,
-              unreadMessages:
-                data.senderId !== localStorage.getItem("userId")
-                  ? room.unreadMessages + 1
-                  : 0, // Reset unreadMessages for the sender
-            };
-          }
-          return room;
+    // Only add listeners if socket exists
+    if (socket) {
+      socket.on("receive_message", (data) => {
+        setChatRooms((prevChatRooms) => {
+          const updatedChatRooms = prevChatRooms.map((room) => {
+            if (room._id === data.roomId) {
+              return {
+                ...room,
+                lastMessage: data.message,
+                lastMessageTimestamp: data.timestamp,
+                unreadMessages:
+                  data.senderId !== localStorage.getItem("userId")
+                    ? room.unreadMessages + 1
+                    : 0,
+              };
+            }
+            return room;
+          });
+          return updatedChatRooms;
         });
-        return updatedChatRooms;
-      });
-    });
-
-    return () => {
-      socket.off("receive_message");
-    };
-  }, [navigate]);
-  
-
-  useEffect(() => {
-    const doctorId = localStorage.getItem("doctorId");
-    if (doctorId) {
-      socketRef.current = io(import.meta.env.VITE_ML_URL, {
-        query: { doctorId },
-      });
-
-      socketRef.current.on("userOnline", ({ userId }) => {
-        setChatRooms(prev =>
-          prev.map(room =>
-            room.userId === userId || room.userId?._id === userId
-              ? { ...room, isOnline: true }
-              : room
-          )
-        );
-      });
-
-      socketRef.current.on("userOffline", ({ userId }) => {
-        setChatRooms(prev =>
-          prev.map(room =>
-            room.userId === userId || room.userId?._id === userId
-              ? { ...room, isOnline: false }
-              : room
-          )
-        );
       });
     }
+
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off("userOnline");
-        socketRef.current.off("userOffline");
-        socketRef.current.disconnect();
+      if (socket) {
+        socket.off("receive_message");
       }
     };
-  }, []);
+  }, [navigate, socket]);
 
   const handleChatRoomClick = async (roomId) => {
     try {

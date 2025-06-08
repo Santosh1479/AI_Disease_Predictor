@@ -6,6 +6,7 @@ import UserContext from "../context/UserContext";
 import "remixicon/fonts/remixicon.css";
 import { LanguageContext } from "../context/LanguageContext";
 import { io } from "socket.io-client";
+import { UserSocketContext } from "../context/UserSocketContext";
 
 const translations = {
   en: {
@@ -53,6 +54,9 @@ const Home = () => {
   const { language, setLanguage } = useContext(LanguageContext);
   const t = translations[language];
   const socketRef = useRef(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const socket = useContext(UserSocketContext);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -88,11 +92,33 @@ const Home = () => {
 
     fetchUserData();
   }, []);
+  useEffect(() => {
+    // Fetch chats and set unreadCount
+    const fetchChats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/chat/user-chat-rooms`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const unread = response.data.reduce(
+          (sum, room) => sum + (room.unreadMessages || 0),
+          0
+        );
+        setUnreadCount(unread);
+      } catch (error) {
+        // handle error
+      }
+    };
+    fetchChats();
+  }, []);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (userId) {
-      socketRef.current = io(import.meta.env.VITE_ML_URL, {
+      socketRef.current = io(import.meta.env.VITE_SOCKET_URL, {
         query: { userId },
       });
     }
@@ -131,35 +157,6 @@ const Home = () => {
     }
   };
 
-  // const handleImageUpload = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   const formData = new FormData();
-  //   formData.append("image", image);
-
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const response = await axios.post(
-  //       `http://127.0.0.1:5000/upload_image`,
-  //       formData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-  //     navigate("/results", {
-  //       state: { disease: response.data.disease, username: name },
-  //     });
-  //   } catch (error) {
-  //     console.error("Failed to upload image", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -194,13 +191,46 @@ const Home = () => {
         <div className="flex justify-center items-center">
           <i className="ri-user-fill text-xl h-8 w-14 pl-5"></i>
           <p>{name}</p>
+          <div className="absolute right-1 mt-2">
+            {/* Hamburger icon */}
+            <button
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="p-2 focus:outline-none relative"
+            >
+              <i className="ri-menu-line text-2xl text-white"></i>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1.5 py-0.5 text-xs">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            {/* Dropdown menu */}
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-gray-200 rounded shadow-lg z-50">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/userchats"); // Change this to your messages route
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
+                >
+                  Messages{" "}
+                  {unreadCount > 0 && (
+                    <span className="ml-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 w-20 h-8 rounded-xl text-white text-sm font-bold mr-5"
-        >
-          {t.logout}
-        </button>
       </div>
       <div className="container mx-auto p-4">
         <h2 className="text-2xl font-bold mb-4">{t.enterSymptoms}</h2>

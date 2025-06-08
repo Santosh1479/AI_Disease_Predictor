@@ -14,11 +14,12 @@ import ChatPage from "./pages/ChatPage"; // Import Chat component
 import { LanguageProvider } from "./context/LanguageContext";
 import UserContext from "./context/UserContext";
 import MessageProvider from "./context/MessageContext";
-import SocketProvider from "./context/SocketContext";
+import { UserSocketProvider } from "./context/UserSocketContext";
+import UserChats from "./pages/UserChats"; 
 
 const App = () => {
   return (
-    <SocketProvider>
+    <UserSocketProvider>
       <LanguageProvider>
         <MessageProvider>
           <UserContext>
@@ -30,6 +31,7 @@ const App = () => {
                   <Route path="/signup" element={<UserSignup />} />
                   <Route path="/doctor-login" element={<DoctorLogin />} />
                   <Route path="/doctor-signup" element={<DoctorSignup />} />
+                  <Route path="/userchats" element={<UserChats />} />
                   <Route
                     path="/home"
                     element={
@@ -70,7 +72,7 @@ const App = () => {
           </UserContext>
         </MessageProvider>
       </LanguageProvider>
-    </SocketProvider>
+    </UserSocketProvider>
   );
 };
 
