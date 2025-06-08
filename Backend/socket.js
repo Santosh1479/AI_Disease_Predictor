@@ -13,17 +13,14 @@ module.exports = (server) => {
   });
 
   io.on('connection', async (socket) => {
-    const { userId, doctorId } = socket.handshake.query;
+    const { userId } = socket.handshake.query;
 
     // Mark user/doctor as online and save socketId
     if (userId) {
       await User.findByIdAndUpdate(userId, { isOnline: true, socketId: socket.id });
       io.emit('userOnline', { userId });
     }
-    if (doctorId) {
-      await Doctor.findByIdAndUpdate(doctorId, { isOnline: true, socketId: socket.id });
-      io.emit('doctorOnline', { doctorId });
-    }
+    
 
     // Listen for messages
     socket.on('sendMessage', async (data) => {
@@ -63,11 +60,6 @@ module.exports = (server) => {
       if (user) {
         await User.findByIdAndUpdate(user._id, { isOnline: false, socketId: null });
         io.emit('userOffline', { userId: user._id });
-      }
-      const doctor = await Doctor.findOne({ socketId: socket.id });
-      if (doctor) {
-        await Doctor.findByIdAndUpdate(doctor._id, { isOnline: false, socketId: null });
-        io.emit('doctorOffline', { doctorId: doctor._id });
       }
     });
   });

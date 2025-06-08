@@ -43,7 +43,7 @@ module.exports.loginUser = async (email, password) => {
 module.exports.getUserById = async (userId) => {
   const user = await userModel.findById(userId);
   if (!user) {
-    throw new Error('User not found');
+    throw new Error('User not found'); 
   }
   return user;
 };

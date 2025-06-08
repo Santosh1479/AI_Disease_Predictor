@@ -10,10 +10,6 @@ const doctorSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   specialisation: { type: String, required: true },
-  isOnline: {
-    type: Boolean,
-    default: false, // Track online/offline status
-  },
 });
 // Pre-save middleware to hash the password
 doctorSchema.pre('save', async function (next) {

@@ -58,32 +58,28 @@ const Home = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (token) {
-          const decodedToken = jwtDecode(token);
-          const userId = decodedToken._id;
-          if (userId) {
-            const response = await axios.get(
-              `${import.meta.env.VITE_BASE_URL}/users/profile`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-            setUser({
-              id: response.data._id,
-              email: response.data.email,
-              fullname: {
-                firstname: response.data.fullname.firstname,
-                lastname: response.data.fullname.lastname,
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          const response = await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/users/profile`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
               },
-            });
-            setName(
-              `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
-            );
-
-          }
-          console.log(user);
+            }
+          );
+          console.log("User data fetched:", response.data);
+          setUser({
+            id: response.data._id,
+            email: response.data.email,
+            fullname: {
+              firstname: response.data.fullname.firstname,
+              lastname: response.data.fullname.lastname,
+            },
+          });
+          setName(
+            `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
+          );
         }
       } catch (error) {
         console.error("Failed to fetch user data", error);
@@ -92,15 +88,14 @@ const Home = () => {
 
     fetchUserData();
   }, []);
+
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (userId) {
       socketRef.current = io(import.meta.env.VITE_ML_URL, {
         query: { userId },
       });
-      // No listeners needed!
     }
-    // Cleanup on unmount: disconnect socket
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
     };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from "react";
+import React, { useState, useEffect,useContext,useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
@@ -8,6 +8,7 @@ const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
   const { socket } = useContext(SocketContext);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -81,30 +82,41 @@ const DoctorHome = () => {
       socket.off("receive_message");
     };
   }, [navigate]);
-  useEffect(() => {
-    // Listen for user online/offline events
-    socket.on("userOnline", ({ userId }) => {
-      setChatRooms((prev) =>
-        prev.map((room) =>
-          room.userId === userId || room.userId?._id === userId
-            ? { ...room, isOnline: true }
-            : room
-        )
-      );
-    });
-    socket.on("userOffline", ({ userId }) => {
-      setChatRooms((prev) =>
-        prev.map((room) =>
-          room.userId === userId || room.userId?._id === userId
-            ? { ...room, isOnline: false }
-            : room
-        )
-      );
-    });
+  
 
+  useEffect(() => {
+    const doctorId = localStorage.getItem("doctorId");
+    if (doctorId) {
+      socketRef.current = io(import.meta.env.VITE_ML_URL, {
+        query: { doctorId },
+      });
+
+      socketRef.current.on("userOnline", ({ userId }) => {
+        setChatRooms(prev =>
+          prev.map(room =>
+            room.userId === userId || room.userId?._id === userId
+              ? { ...room, isOnline: true }
+              : room
+          )
+        );
+      });
+
+      socketRef.current.on("userOffline", ({ userId }) => {
+        setChatRooms(prev =>
+          prev.map(room =>
+            room.userId === userId || room.userId?._id === userId
+              ? { ...room, isOnline: false }
+              : room
+          )
+        );
+      });
+    }
     return () => {
-      socket.off("userOnline");
-      socket.off("userOffline");
+      if (socketRef.current) {
+        socketRef.current.off("userOnline");
+        socketRef.current.off("userOffline");
+        socketRef.current.disconnect();
+      }
     };
   }, []);
 
