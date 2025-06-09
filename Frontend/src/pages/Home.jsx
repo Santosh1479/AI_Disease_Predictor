@@ -58,43 +58,44 @@ const Home = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const socket = useContext(UserSocketContext);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          // Wait a moment to let socket update DB
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          const response = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/users/profile`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          console.log("User data fetched:", response.data);
-          setUser({
-            id: response.data._id,
-            email: response.data.email,
-            fullname: {
-              firstname: response.data.fullname.firstname,
-              lastname: response.data.fullname.lastname,
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        // Wait a moment to let socket update DB
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/users/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-            isOnline: response.data.isOnline, // <-- add this if you want to use it
-          });
-          setName(
-            `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
-          );
-        }
-      } catch (error) {
-        console.error("Failed to fetch user data", error);
+          }
+        );
+        console.log("User data fetched:", response.data);
+        setUser({
+          id: response.data._id,
+          email: response.data.email,
+          fullname: {
+            firstname: response.data.fullname.firstname,
+            lastname: response.data.fullname.lastname,
+          },
+          isOnline: response.data.isOnline,
+        });
+        setName(
+          `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
+        );
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch user data", error);
+    }
+  };
 
+  useEffect(() => {
     fetchUserData();
   }, []);
+
   useEffect(() => {
     if (!socket) return;
     socket.on("connect", fetchUserData);

@@ -20,8 +20,8 @@ import UserChats from "./pages/UserChats";
 
 const App = () => {
   return (
-    <DoctorSocketProvider>
-      <UserSocketProvider>
+    <UserSocketProvider>
+      <DoctorSocketProvider>
         <LanguageProvider>
           <MessageProvider>
             <UserContext>
@@ -74,8 +74,8 @@ const App = () => {
             </UserContext>
           </MessageProvider>
         </LanguageProvider>
-      </UserSocketProvider>
-    </DoctorSocketProvider>
+      </DoctorSocketProvider>
+    </UserSocketProvider>
   );
 };
 

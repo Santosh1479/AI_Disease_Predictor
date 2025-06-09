@@ -46,7 +46,13 @@ const DoctorHome = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setChatRooms(response.data);
+        setChatRooms(
+          response.data.map((room) => ({
+            ...room,
+            isOnline: false,
+          }))
+        );
+        console.log("Chat rooms fetched:", response.data);
       } catch (error) {
         console.error("Error fetching chat rooms:", error);
       }
@@ -93,30 +99,32 @@ const DoctorHome = () => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("userOnline", ({ userId }) => {
-      console.log("userOnline event for", userId);
+    socket.on("currentOnlineUsers", ({ userIds }) => {
+      console.log("Received currentOnlineUsers", userIds);
       setChatRooms((prev) =>
         prev.map((room) => {
           const roomUserId =
             typeof room.userId === "object" ? room.userId._id : room.userId;
-          return roomUserId === userId ? { ...room, isOnline: true } : room;
+          console.log(
+            "Checking room",
+            roomUserId,
+            "against online users:",
+            userIds,
+            "isOnline:",
+            userIds.includes(roomUserId)
+          );
+          console.log(
+            "roomUserId:", JSON.stringify(roomUserId),
+            "userIds:", JSON.stringify(userIds),
+            "includes:", userIds.includes(roomUserId)
+          );
+          return userIds.includes(roomUserId)
+            ? { ...room, isOnline: true }
+            : { ...room, isOnline: false };
         })
       );
     });
-    socket.on("userOffline", ({ userId }) => {
-      console.log("userOffline event for", userId);
-      setChatRooms((prev) =>
-        prev.map((room) => {
-          const roomUserId =
-            typeof room.userId === "object" ? room.userId._id : room.userId;
-          return roomUserId === userId ? { ...room, isOnline: false } : room;
-        })
-      );
-    });
-    return () => {
-      socket.off("userOnline");
-      socket.off("userOffline");
-    };
+    return () => socket.off("currentOnlineUsers");
   }, [socket]);
 
   const handleChatRoomClick = async (roomId) => {
@@ -172,35 +180,45 @@ const DoctorHome = () => {
       {/* Chat Rooms */}
       <div className="w-full border-r border-gray-300 overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">Texts</h2>
-        {chatRooms.map((room, index) => (
-          <div
-            key={index}
-            className="p-2 cursor-pointer hover:bg-gray-200"
-            onClick={() => handleChatRoomClick(room._id)}
-          >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div
-                  className={`h-3 w-3 rounded-full mr-2 ${
-                    room.isOnline ? "bg-green-500" : "bg-gray-500"
-                  }`}
-                ></div>
-                <h3 className="text-lg font-semibold">{room.userName}</h3>
+        {chatRooms.map((room, index) => {
+          console.log(
+            "Rendering room",
+            room.userId,
+            "isOnline:",
+            room.isOnline
+          );
+          return (
+            <div
+              key={index}
+              className="p-2 cursor-pointer hover:bg-gray-200"
+              onClick={() => handleChatRoomClick(room._id)}
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div
+                    className={`h-3 w-3 rounded-full mr-2 ${
+                      room.isOnline ? "bg-green-500" : "bg-gray-500"
+                    }`}
+                  ></div>
+                  <h3 className="text-lg font-semibold">{room.userName}</h3>
+                </div>
+                {room.unreadMessages > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {room.unreadMessages}
+                  </span>
+                )}
               </div>
-              {room.unreadMessages > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {room.unreadMessages}
-                </span>
-              )}
+              <p className="text-sm text-gray-500 truncate">
+                {room.lastMessage}
+              </p>
+              <small className="text-xs text-gray-400">
+                {room.lastMessageTimestamp
+                  ? new Date(room.lastMessageTimestamp).toLocaleTimeString()
+                  : ""}
+              </small>
             </div>
-            <p className="text-sm text-gray-500 truncate">{room.lastMessage}</p>
-            <small className="text-xs text-gray-400">
-              {room.lastMessageTimestamp
-                ? new Date(room.lastMessageTimestamp).toLocaleTimeString()
-                : ""}
-            </small>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

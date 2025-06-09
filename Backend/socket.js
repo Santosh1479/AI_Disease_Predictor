@@ -1,8 +1,10 @@
 const User = require('./models/user.models');
 const Doctor = require('./models/doctor.model');
 const ChatRoom = require('./models/chatRoom.model');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { createClient } = require('redis');
 
-module.exports = (server) => {
+module.exports = async (server) => {
   const { Server } = require('socket.io');
   const io = new Server(server, {
     cors: {
@@ -11,9 +13,22 @@ module.exports = (server) => {
       credentials: true,
     },
   });
+  const pubClient = createClient({ url: 'redis://localhost:6379' });
+  const subClient = pubClient.duplicate();
+
+  await pubClient.connect();
+  await subClient.connect();
+
+  io.adapter(createAdapter(pubClient, subClient));
+
 
   io.on('connection', async (socket) => {
     const { userId } = socket.handshake.query;
+    if (!userId) {
+      const onlineUsers = await User.find({ isOnline: true }, '_id');
+      socket.emit('currentOnlineUsers', { userIds: onlineUsers.map(u => u._id.toString()) });
+      console.log("Emitted currentOnlineUsers to doctor socket", socket.id, onlineUsers.map(u => u._id.toString()));
+    }
     console.log("Socket connected:", socket.id, "userId:", userId);
     if (userId) {
       await User.findByIdAndUpdate(userId, { isOnline: true, socketId: socket.id });
