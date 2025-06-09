@@ -64,6 +64,8 @@ const Home = () => {
         const token = localStorage.getItem("token");
         const userId = localStorage.getItem("userId");
         if (userId) {
+          // Wait a moment to let socket update DB
+          await new Promise((resolve) => setTimeout(resolve, 300));
           const response = await axios.get(
             `${import.meta.env.VITE_BASE_URL}/users/profile`,
             {
@@ -80,6 +82,7 @@ const Home = () => {
               firstname: response.data.fullname.firstname,
               lastname: response.data.fullname.lastname,
             },
+            isOnline: response.data.isOnline, // <-- add this if you want to use it
           });
           setName(
             `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
@@ -92,6 +95,12 @@ const Home = () => {
 
     fetchUserData();
   }, []);
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("connect", fetchUserData);
+    return () => socket.off("connect", fetchUserData);
+  }, [socket]);
+
   useEffect(() => {
     // Fetch chats and set unreadCount
     const fetchChats = async () => {
@@ -113,18 +122,6 @@ const Home = () => {
       }
     };
     fetchChats();
-  }, []);
-
-  useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (userId) {
-      socketRef.current = io(import.meta.env.VITE_SOCKET_URL, {
-        query: { userId },
-      });
-    }
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
   }, []);
 
   const handleSubmit = async (e) => {
@@ -173,10 +170,13 @@ const Home = () => {
           },
         }
       );
-
+      if (socket) {
+        socket.disconnect();
+      }
       // Remove token and userId from localStorage
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
+      window.dispatchEvent(new Event("storage"));
 
       // Redirect to login page
       navigate("/login");

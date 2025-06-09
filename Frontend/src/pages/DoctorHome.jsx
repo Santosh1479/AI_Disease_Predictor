@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { UserSocketContext } from "../context/UserSocketContext";
+// import { UserSocketContext } from "../context/UserSocketContext";
 import { io } from "socket.io-client";
+import { DoctorSocketContext } from "../context/DoctorSocketContext";
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
-  const socket = useContext(UserSocketContext);
+  // const socket = useContext(UserSocketContext);
+  const socket = useContext(DoctorSocketContext);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -81,6 +83,41 @@ const DoctorHome = () => {
       }
     };
   }, [navigate, socket]);
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("connect", () => {
+      console.log("Doctor socket connected!", socket.id);
+    });
+    return () => socket.off("connect");
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("userOnline", ({ userId }) => {
+      console.log("userOnline event for", userId);
+      setChatRooms((prev) =>
+        prev.map((room) => {
+          const roomUserId =
+            typeof room.userId === "object" ? room.userId._id : room.userId;
+          return roomUserId === userId ? { ...room, isOnline: true } : room;
+        })
+      );
+    });
+    socket.on("userOffline", ({ userId }) => {
+      console.log("userOffline event for", userId);
+      setChatRooms((prev) =>
+        prev.map((room) => {
+          const roomUserId =
+            typeof room.userId === "object" ? room.userId._id : room.userId;
+          return roomUserId === userId ? { ...room, isOnline: false } : room;
+        })
+      );
+    });
+    return () => {
+      socket.off("userOnline");
+      socket.off("userOffline");
+    };
+  }, [socket]);
 
   const handleChatRoomClick = async (roomId) => {
     try {

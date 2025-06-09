@@ -14,27 +14,31 @@ module.exports = (server) => {
 
   io.on('connection', async (socket) => {
     const { userId } = socket.handshake.query;
-
-    // Mark user/doctor as online and save socketId
+    console.log("Socket connected:", socket.id, "userId:", userId);
     if (userId) {
       await User.findByIdAndUpdate(userId, { isOnline: true, socketId: socket.id });
       io.emit('userOnline', { userId });
     }
-    
+    socket.on('disconnect', async () => {
+      const user = await User.findOne({ socketId: socket.id });
+      if (user) {
+        await User.findByIdAndUpdate(user._id, { isOnline: false, socketId: null });
+        console.log("Emitting userOffline for", user._id);
+        io.emit('userOffline', { userId: user._id });
+      }
+    });
 
-    // Listen for messages
     socket.on('sendMessage', async (data) => {
-      // data: { roomId, senderId, receiverId, message, senderType }
       const { roomId, senderId, receiverId, message, senderType } = data;
 
-      // Update lastMessage in ChatRoom (for demo)
+
       await ChatRoom.findByIdAndUpdate(roomId, {
         lastMessage: message,
         lastMessageTimestamp: new Date(),
         $inc: { unreadMessages: 1 }
       });
 
-      // Emit message to receiver if online
+
       let receiverSocket = null;
       if (senderType === 'user') {
         const doctor = await Doctor.findById(receiverId);
@@ -51,15 +55,6 @@ module.exports = (server) => {
           message,
           timestamp: new Date(),
         });
-      }
-    });
-
-    // Handle disconnect
-    socket.on('disconnect', async () => {
-      const user = await User.findOne({ socketId: socket.id });
-      if (user) {
-        await User.findByIdAndUpdate(user._id, { isOnline: false, socketId: null });
-        io.emit('userOffline', { userId: user._id });
       }
     });
   });
