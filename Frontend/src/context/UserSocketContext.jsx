@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
 export const UserSocketContext = createContext(null);
@@ -10,7 +10,10 @@ export const UserSocketProvider = ({ children }) => {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
     const s = io(import.meta.env.VITE_SOCKET_URL, {
-      query: { userId }, // <-- THIS IS CRUCIAL
+      query: { userId },
+    });
+    s.on("connect", () => {
+      console.log("User socket connected!", s.id);
     });
     setSocket(s);
     return () => {

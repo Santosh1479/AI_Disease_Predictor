@@ -1,66 +1,69 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-// import { UserSocketContext } from "../context/UserSocketContext";
-import { io } from "socket.io-client";
 import { DoctorSocketContext } from "../context/DoctorSocketContext";
 
 const DoctorHome = () => {
   const [chatRooms, setChatRooms] = useState([]);
   const navigate = useNavigate();
-  // const socket = useContext(UserSocketContext);
   const socket = useContext(DoctorSocketContext);
-  const socketRef = useRef(null);
 
-  useEffect(() => {
-    const fetchDoctorProfile = async () => {
+  // Move these functions OUTSIDE of useEffect!
+  const fetchChatRooms = async () => {
+    try {
       const token = localStorage.getItem("token");
       if (!token) {
-        navigate("/doctor-login");
+        console.error("No token found");
         return;
       }
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/doctors/profile`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        console.log("Doctor profile:", response.data);
-        fetchChatRooms();
-      } catch (error) {
-        console.error("Error fetching doctor profile:", error);
-      }
-    };
-
-    const fetchChatRooms = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.error("No token found");
-          return;
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/chat/doctor-chat-rooms`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
-        const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/chat/doctor-chat-rooms`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setChatRooms(
-          response.data.map((room) => ({
+      );
+      setChatRooms((prev) =>
+        response.data.map((room) => {
+          const prevRoom = prev.find(
+            (r) =>
+              (typeof r.userId === "object" ? r.userId._id : r.userId) ===
+              (typeof room.userId === "object" ? room.userId._id : room.userId)
+          );
+          return {
             ...room,
-            isOnline: false,
-          }))
-        );
-        console.log("Chat rooms fetched:", response.data);
-      } catch (error) {
-        console.error("Error fetching chat rooms:", error);
-      }
-    };
+            isOnline: prevRoom ? prevRoom.isOnline : false,
+          };
+        })
+      );
+      console.log("Chat rooms fetched:", response.data);
+    } catch (error) {
+      console.error("Error fetching chat rooms:", error);
+    }
+  };
 
+  const fetchDoctorProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/doctor-login");
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/doctors/profile`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Doctor profile:", response.data);
+      fetchChatRooms();
+    } catch (error) {
+      console.error("Error fetching doctor profile:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchDoctorProfile();
 
-    // Only add listeners if socket exists
     if (socket) {
       socket.on("receive_message", (data) => {
         setChatRooms((prevChatRooms) => {
@@ -89,6 +92,11 @@ const DoctorHome = () => {
       }
     };
   }, [navigate, socket]);
+
+  useEffect(() => {
+    fetchChatRooms();
+  }, []);
+
   useEffect(() => {
     if (!socket) return;
     socket.on("connect", () => {
@@ -100,27 +108,18 @@ const DoctorHome = () => {
   useEffect(() => {
     if (!socket) return;
     socket.on("currentOnlineUsers", ({ userIds }) => {
-      console.log("Received currentOnlineUsers", userIds);
       setChatRooms((prev) =>
         prev.map((room) => {
-          const roomUserId =
-            typeof room.userId === "object" ? room.userId._id : room.userId;
-          console.log(
-            "Checking room",
-            roomUserId,
-            "against online users:",
-            userIds,
-            "isOnline:",
-            userIds.includes(roomUserId)
-          );
-          console.log(
-            "roomUserId:", JSON.stringify(roomUserId),
-            "userIds:", JSON.stringify(userIds),
-            "includes:", userIds.includes(roomUserId)
-          );
-          return userIds.includes(roomUserId)
-            ? { ...room, isOnline: true }
-            : { ...room, isOnline: false };
+          const roomUserId = (
+            typeof room.userId === "object" ? room.userId._id : room.userId
+          )
+            ?.toString()
+            .trim();
+          const online = userIds
+            .map((id) => id.toString().trim())
+            .includes(roomUserId);
+          console.log("Rendering room", roomUserId, "isOnline:", online);
+          return { ...room, isOnline: online };
         })
       );
     });

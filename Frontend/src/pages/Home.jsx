@@ -86,6 +86,7 @@ const Home = () => {
         setName(
           `${response.data.fullname.firstname} ${response.data.fullname.lastname}`
         );
+        console.log("User online status:", response.data.isOnline);
       }
     } catch (error) {
       console.error("Failed to fetch user data", error);
